@@ -1,0 +1,268 @@
+/**
+ * Mood Gravity - Styles
+ * 极简样式：背景、容器、长按指示器
+ */
+
+/* ==================== 基础样式 ==================== */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: #fffcf6;
+    font-family: 'Noto Serif SC', serif;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* ==================== 返回主页按钮 ==================== */
+
+.back-home-btn {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 100;
+    padding: 8px 16px;
+    background: rgba(26, 26, 26, 0.8);
+    color: #fffcf6;
+    text-decoration: none;
+    font-size: 14px;
+    font-family: 'Noto Serif SC', serif;
+    border-radius: 20px;
+    transition: all 0.3s ease;
+    opacity: 0.6;
+}
+
+.back-home-btn:hover {
+    opacity: 1;
+    background: rgba(26, 26, 26, 1);
+    transform: translateX(-3px);
+}
+
+/* ==================== Canvas 容器 ==================== */
+
+#canvas-container {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    width: 100vw;
+    height: 100vh;
+}
+
+#canvas-container canvas {
+    display: block;
+}
+
+/* ==================== 网格背景 ==================== */
+
+.grid-background {
+    position: fixed;
+    inset: 0;
+    background-image:
+        linear-gradient(to right, rgba(0, 0, 0, 0.03) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+    z-index: -1;
+    pointer-events: none;
+}
+
+/* ==================== 长按指示器 ==================== */
+
+.hold-indicator {
+    position: fixed;
+    bottom: 48px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 30;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    opacity: 0.6;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+}
+
+.hold-indicator.active {
+    opacity: 1;
+}
+
+.hint-text {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 21px;  /* 放大3倍 */
+    letter-spacing: 0.1em;
+    color: #2d2d2d;
+    text-align: center;
+    max-width: 80vw;
+    line-height: 1.5;
+    animation: glow-pulse 2s ease-in-out infinite;
+}
+
+@keyframes glow-pulse {
+    0%, 100% {
+        text-shadow: 0 0 5px rgba(45, 45, 45, 0.3), 0 0 10px rgba(45, 45, 45, 0.2);
+    }
+    50% {
+        text-shadow: 0 0 15px rgba(45, 45, 45, 0.5), 0 0 25px rgba(45, 45, 45, 0.3);
+    }
+}
+
+.typing-text {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 42px;  /* 底部提示文字的2倍 */
+    letter-spacing: 0.08em;
+    color: #1a1a1a;
+    text-align: center;
+    font-weight: bold;
+    min-height: 50px;
+}
+
+.progress-line {
+    width: 1px;
+    height: 48px;
+    background: linear-gradient(to bottom, #1a1a1a, transparent);
+    transform-origin: top center;
+    transform: scaleY(0);
+}
+
+.hold-indicator.active .progress-line {
+    animation: hold-progress 500ms linear forwards;
+}
+
+@keyframes hold-progress {
+    from {
+        transform: scaleY(0);
+    }
+    to {
+        transform: scaleY(1);
+    }
+}
+
+/* ==================== 响应式适配 ==================== */
+
+@media (max-width: 768px) {
+    .hold-indicator {
+        bottom: 24px;
+    }
+
+    .hint-text {
+        font-size: 10px;
+    }
+}
+
+/* ==================== 选择高亮 ==================== */
+
+::selection {
+    background: rgba(0, 0, 0, 0.1);
+    color: #1a1a1a;
+}
+
+/* ==================== 恭喜画面 ==================== */
+
+.congrats-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    background: rgba(255, 252, 246, 0.95);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.8s ease, visibility 0.8s ease;
+}
+
+.congrats-overlay.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+.congrats-content {
+    text-align: center;
+    padding: 60px;
+}
+
+.congrats-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 128px;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin-bottom: 30px;
+    letter-spacing: 0.1em;
+}
+
+.congrats-message {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 56px;
+    color: #2d2d2d;
+    margin-bottom: 20px;
+    letter-spacing: 0.05em;
+}
+
+.congrats-submessage {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 48px;
+    color: #4a4a4a;
+    margin-bottom: 40px;
+    letter-spacing: 0.05em;
+}
+
+.congrats-signature {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 36px;
+    color: #818176;
+    font-style: italic;
+    margin-bottom: 50px;
+}
+
+.reset-btn {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 40px;
+    color: #fffcf6;
+    background: #1a1a1a;
+    border: none;
+    padding: 36px 80px;
+    cursor: pointer;
+    letter-spacing: 0.05em;
+    transition: all 0.3s ease;
+    pointer-events: auto;
+}
+
+.reset-btn:hover {
+    background: #2d2d2d;
+    transform: scale(1.05);
+}
+
+.reset-btn:active {
+    transform: scale(0.98);
+}
+
+@media (max-width: 768px) {
+    .congrats-title {
+        font-size: 84px;
+    }
+
+    .congrats-message {
+        font-size: 44px;
+    }
+
+    .congrats-submessage {
+        font-size: 36px;
+    }
+
+    .congrats-content {
+        padding: 40px 20px;
+    }
+
+    .hint-text {
+        font-size: 16px;
+    }
+
+    .typing-text {
+        font-size: 32px;
+    }
+}

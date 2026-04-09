@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>情绪引力场 - Mood Gravity</title>
+
+    <!-- 字体加载 -->
+    <link rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&family=Inter:wght@300;400;600;900&family=Noto+Serif:wght@400;700&display=swap">
+
+    <!-- 样式文件 -->
+    <link rel="stylesheet" href="css/style.css">
+
+    <!-- 预加载关键资源 -->
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+</head>
+<body>
+    <!-- 返回主页按钮 -->
+    <a href="../../index.html" class="back-home-btn" title="返回主页">← 返回主页</a>
+
+    <!-- 网格背景 -->
+    <div class="grid-background"></div>
+
+    <!-- Canvas 渲染容器 -->
+    <div id="canvas-container"></div>
+
+    <!-- 底部提示 -->
+    <div class="hold-indicator">
+        <span class="hint-text">按住鼠标启动黑洞，松开鼠标爆破坏情绪，每次爆破都会减少坏情绪，直至坏情绪完全消失。</span>
+        <span class="typing-text"></span>
+        <div class="progress-line"></div>
+    </div>
+
+    <!-- 恭喜画面 -->
+    <div id="congrats-overlay" class="congrats-overlay">
+        <div class="congrats-content">
+            <h1 class="congrats-title">恭喜你</h1>
+            <p class="congrats-message">负面情绪被你扫干净了</p>
+            <p class="congrats-submessage">新的一天要满满正能量哦☺</p>
+            <p class="congrats-signature">——by Addy❤️</p>
+            <button id="reset-btn" class="reset-btn">重置情绪宇宙，再扫次坏情绪</button>
+        </div>
+    </div>
+
+    <!-- JavaScript 模块（按依赖顺序加载） -->
+    <script src="js/word-database.js"></script>
+    <script src="js/physics-engine.js"></script>
+    <script src="js/renderer.js"></script>
+    <script src="js/particle-system.js"></script>
+    <script src="js/interaction.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
