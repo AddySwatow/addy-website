@@ -405,10 +405,11 @@
       transition: transform 0.3s ease;
       mask-image: radial-gradient(circle at center, black 50%, rgba(0,0,0,0.5) 60%, transparent 70%, transparent 100%);
       -webkit-mask-image: radial-gradient(circle at center, black 50%, rgba(0,0,0,0.5) 60%, transparent 70%, transparent 100%);
+      transform: scaleX(-1);
     }
 
     .trusted-image:hover img {
-      transform: translateY(-5px);
+      transform: scaleX(-1) translateY(-5px);
     }
 
     /* ===== CONTACT LIST STYLES ===== */
@@ -1309,6 +1310,157 @@
       border-radius: 3px;
     }
 
+    /* ===== GUESTBOOK SECTION ===== */
+    .guestbook {
+      background: linear-gradient(180deg, var(--bg) 0%, #0f0f12 50%, var(--bg) 100%);
+      padding: 8rem 0;
+      position: relative;
+    }
+
+    .guestbook-form {
+      max-width: 600px;
+      margin: 0 auto 3rem;
+    }
+
+    .guestbook-input {
+      width: 100%;
+      padding: 1rem 1.2rem;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      color: var(--text);
+      font-size: 1rem;
+      font-family: inherit;
+      transition: all 0.3s ease;
+      margin-bottom: 1rem;
+    }
+
+    .guestbook-input:focus {
+      outline: none;
+      border-color: var(--primary);
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .guestbook-input::placeholder {
+      color: var(--text-light);
+    }
+
+    .guestbook-textarea {
+      min-height: 120px;
+      resize: vertical;
+    }
+
+    .guestbook-submit {
+      display: block;
+      width: 100%;
+      padding: 1rem;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .guestbook-submit:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(255, 62, 125, 0.3);
+    }
+
+    .guestbook-submit:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .guestbook-tip {
+      text-align: center;
+      color: var(--text-light);
+      font-size: 0.85rem;
+      margin-bottom: 1rem;
+      opacity: 0.8;
+    }
+
+    .guestbook-count {
+      text-align: center;
+      color: var(--text-light);
+      margin-bottom: 2rem;
+      font-size: 0.95rem;
+    }
+
+    .guestbook-list {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .guestbook-item {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.2rem 1.5rem;
+      margin-bottom: 1rem;
+      transition: all 0.3s ease;
+    }
+
+    .guestbook-item:hover {
+      border-color: rgba(255, 62, 125, 0.3);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .guestbook-item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+
+    .guestbook-item-nickname {
+      font-weight: 600;
+      color: var(--primary);
+    }
+
+    .guestbook-item-time {
+      font-size: 0.8rem;
+      color: var(--text-light);
+    }
+
+    .guestbook-item-content {
+      color: var(--text);
+      line-height: 1.6;
+      word-break: break-word;
+    }
+
+    .guestbook-empty {
+      text-align: center;
+      color: var(--text-light);
+      padding: 3rem;
+    }
+
+    .guestbook-loading {
+      text-align: center;
+      color: var(--text-light);
+      padding: 2rem;
+    }
+
+    .guestbook-message {
+      text-align: center;
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+    }
+
+    .guestbook-message.success {
+      background: rgba(0, 200, 100, 0.1);
+      color: #00c864;
+    }
+
+    .guestbook-message.error {
+      background: rgba(255, 62, 125, 0.1);
+      color: var(--primary);
+    }
+
     /* Responsive */
     @media (max-width: 768px) {
       .carousel-container {
@@ -1476,6 +1628,7 @@
           <li><a href="#trusted" class="nav-link">About me</a></li>
           <li><a href="#portfolio" class="nav-link">Projects</a></li>
           <li><a href="#thoughts" class="nav-link">Thoughts</a></li>
+          <li><a href="#guestbook" class="nav-link">Guestbook</a></li>
           <li><a href="#contact" class="nav-link">Contact</a></li>
         </ul>
       </nav>
@@ -1513,11 +1666,6 @@
     <section id="trusted" class="trusted">
       <div class="container">
         <div class="trusted-content">
-          <div class="trusted-text">
-            <h2 id="trusted-title">About Me</h2>
-            <p id="trusted-desc"></p>
-            <div class="signature" id="trusted-signature">— Addy</div>
-          </div>
           <div class="trusted-image">
             <img
               src="images/1.png"
@@ -1526,6 +1674,11 @@
               width="400"
               height="300"
             />
+          </div>
+          <div class="trusted-text">
+            <h2 id="trusted-title">About Me</h2>
+            <p id="trusted-desc"></p>
+            <div class="signature" id="trusted-signature">— Addy</div>
           </div>
         </div>
 
@@ -1714,6 +1867,43 @@
             <div class="modal-date" id="modalDate"></div>
             <div class="modal-body" id="modalBody"></div>
           </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Guestbook Section -->
+    <section id="guestbook" class="guestbook">
+      <div class="container">
+        <h2 class="section-title" data-en="Guestbook" data-zh="留言板">留言板</h2>
+        <p class="section-desc" data-en="Since you're here, drop a line, leave your mark🐾" data-zh="来都来了，唠两句，留个爪子吧🐾">来都来了，唠两句，留个爪子吧🐾</p>
+
+        <div class="guestbook-form">
+          <div id="guestbookMessage" class="guestbook-message" style="display: none;"></div>
+          <input
+            type="text"
+            id="guestbookNickname"
+            class="guestbook-input"
+            placeholder="你的昵称（最多20字）"
+            data-placeholder-zh="你的昵称（最多20字）"
+            data-placeholder-en="Your nickname (max 20 chars)"
+            maxlength="20"
+          />
+          <textarea
+            id="guestbookContent"
+            class="guestbook-input guestbook-textarea"
+            placeholder="写点什么...（最多500字）"
+            data-placeholder-zh="写点什么...（最多500字）"
+            data-placeholder-en="Write something... (max 500 chars)"
+            maxlength="500"
+          ></textarea>
+          <p class="guestbook-tip" data-tip-zh="温馨提示：禁止发布链接、广告及不当言论，违法行为需自负法律责任。 🌸" data-tip-en="Note: Links, ads, and inappropriate content are prohibited. Legal responsibility applies to illegal content. 🌸">温馨提示：禁止发布链接、广告及不当言论，违法行为需自负法律责任。 🌸</p>
+          <button type="button" id="guestbookSubmit" class="guestbook-submit" data-text-zh="提交留言" data-text-en="Submit">提交留言</button>
+        </div>
+
+        <div id="guestbookCount" class="guestbook-count" data-text-zh="加载中..." data-text-en="Loading...">加载中...</div>
+
+        <div id="guestbookList" class="guestbook-list">
+          <div class="guestbook-loading" data-text-zh="加载留言中..." data-text-en="Loading comments...">加载留言中...</div>
         </div>
       </div>
     </section>
@@ -1987,6 +2177,7 @@
           navAbout: 'About me',
           navProjects: 'Projects',
           navThoughts: 'Thoughts',
+          navGuestbook: 'Guestbook',
           navContact: 'Contact',
           heroSubtitle: 'Explore something interesting',
           heroBtn: 'Check My Works →',
@@ -1997,13 +2188,24 @@
           thoughtsTitle: 'My Thoughts',
           thoughtsDesc: '随想随记，记录思想的碎片',
           portfolioBtn: 'View My Works',
-          footer: '© 2026 Addy. All rights reserved.'
+          footer: '© 2026 Addy. All rights reserved.',
+          gbCount: 'comments',
+          gbEmpty: 'No comments yet, be the first!',
+          gbLoading: 'Loading comments...',
+          gbLoadError: 'Failed to load, please refresh',
+          gbSuccess: 'Comment posted!',
+          gbError: 'Please enter nickname and content',
+          gbNickLong: 'Nickname max 20 characters',
+          gbContentLong: 'Content max 500 characters',
+          gbSubmitError: 'Failed to submit, please retry',
+          gbSubmit: 'Submit Comment'
         },
         zh: {
           navHome: '首页',
           navAbout: '关于我',
           navProjects: '项目案例',
           navThoughts: '随想',
+          navGuestbook: '留言板',
           navContact: '联系我',
           heroSubtitle: '探索有趣的事物',
           heroBtn: '查看我的作品 →',
@@ -2014,7 +2216,17 @@
           thoughtsTitle: '随想录',
           thoughtsDesc: '随想随记，记录思想的碎片',
           portfolioBtn: '查看全部',
-          footer: '© 2026 Addy. 保留所有权利.'
+          footer: '© 2026 Addy. 保留所有权利.',
+          gbCount: '条留言',
+          gbEmpty: '暂无留言，来抢个沙发吧~',
+          gbLoading: '加载留言中...',
+          gbLoadError: '加载失败，请刷新重试',
+          gbSuccess: '留言成功！',
+          gbError: '请填写昵称和留言内容',
+          gbNickLong: '昵称最多20字',
+          gbContentLong: '留言最多500字',
+          gbSubmitError: '提交失败，请重试',
+          gbSubmit: '提交留言'
         }
       };
 
@@ -2037,7 +2249,8 @@
           document.querySelectorAll('.nav-link')[1].textContent = t.navAbout;
           document.querySelectorAll('.nav-link')[2].textContent = t.navProjects;
           document.querySelectorAll('.nav-link')[3].textContent = t.navThoughts;
-          document.querySelectorAll('.nav-link')[4].textContent = t.navContact;
+          document.querySelectorAll('.nav-link')[4].textContent = t.navGuestbook;
+          document.querySelectorAll('.nav-link')[5].textContent = t.navContact;
           document.querySelector('.hero-subtitle').textContent = t.heroSubtitle;
           document.querySelector('.btn-primary').textContent = t.heroBtn;
 
@@ -2048,6 +2261,50 @@
           // Update thoughts section
           document.querySelectorAll('.section-title')[1].textContent = t.thoughtsTitle;
           document.querySelectorAll('.section-desc')[1].textContent = t.thoughtsDesc;
+
+          // Update guestbook section
+          const guestbookTitle = document.querySelector('#guestbook .section-title');
+          const guestbookDesc = document.querySelector('#guestbook .section-desc');
+          if (guestbookTitle) {
+            guestbookTitle.textContent = lang === 'zh' ? guestbookTitle.dataset.zh : guestbookTitle.dataset.en;
+          }
+          if (guestbookDesc) {
+            guestbookDesc.textContent = lang === 'zh' ? guestbookDesc.dataset.zh : guestbookDesc.dataset.en;
+          }
+
+          // Update guestbook form
+          const nicknameInput = document.getElementById('guestbookNickname');
+          const contentInput = document.getElementById('guestbookContent');
+          const submitBtn = document.getElementById('guestbookSubmit');
+          const countDiv = document.getElementById('guestbookCount');
+
+          if (nicknameInput) {
+            nicknameInput.placeholder = lang === 'zh' ? nicknameInput.dataset.placeholderZh : nicknameInput.dataset.placeholderEn;
+          }
+          if (contentInput) {
+            contentInput.placeholder = lang === 'zh' ? contentInput.dataset.placeholderZh : contentInput.dataset.placeholderEn;
+          }
+          if (submitBtn) {
+            submitBtn.textContent = lang === 'zh' ? submitBtn.dataset.textZh : submitBtn.dataset.textEn;
+          }
+
+          // Update guestbook tip
+          const tipP = document.querySelector('.guestbook-tip');
+          if (tipP) {
+            tipP.textContent = lang === 'zh' ? tipP.dataset.tipZh : tipP.dataset.tipEn;
+          }
+
+          if (countDiv && !countDiv.textContent.includes(t.gbCount)) {
+            // 只更新"加载中"状态，保留已有留言数
+            if (countDiv.dataset.textZh && countDiv.textContent === countDiv.dataset.textZh) {
+              countDiv.textContent = countDiv.dataset.textEn;
+            } else if (countDiv.dataset.textEn && countDiv.textContent === countDiv.dataset.textEn) {
+              countDiv.textContent = countDiv.dataset.textZh;
+            }
+          }
+
+          // Reload guestbook to update count translation
+          loadGuestbook();
 
           document.querySelector('.btn-outline').textContent = t.portfolioBtn;
           document.querySelector('.footer p').textContent = t.footer;
@@ -2406,6 +2663,159 @@
           closeWorksModal();
         }
       });
+
+      // --- Guestbook Section ---
+      const GUESTBOOK_API = 'https://addy-comment-api.123519906.workers.dev/';
+      const guestbookList = document.getElementById('guestbookList');
+      const guestbookCount = document.getElementById('guestbookCount');
+      const guestbookNickname = document.getElementById('guestbookNickname');
+      const guestbookContent = document.getElementById('guestbookContent');
+      const guestbookSubmit = document.getElementById('guestbookSubmit');
+      const guestbookMessage = document.getElementById('guestbookMessage');
+
+      // 获取留言板翻译文本
+      function getGbText(key) {
+        return translations[currentLang][key] || translations['en'][key];
+      }
+
+      // 加载留言列表
+      async function loadGuestbook() {
+        try {
+          const response = await fetch(GUESTBOOK_API);
+          const result = await response.json();
+
+          if (result.success && result.data) {
+            renderGuestbook(result.data);
+            guestbookCount.textContent = `${result.data.length} ${getGbText('gbCount')}`;
+          } else {
+            guestbookList.innerHTML = `<div class="guestbook-empty">${getGbText('gbEmpty')}</div>`;
+            guestbookCount.textContent = `0 ${getGbText('gbCount')}`;
+          }
+        } catch (error) {
+          console.error('加载留言失败:', error);
+          guestbookList.innerHTML = `<div class="guestbook-empty">${getGbText('gbLoadError')}</div>`;
+        }
+      }
+
+      // 渲染留言列表
+      function renderGuestbook(comments) {
+        if (!comments || comments.length === 0) {
+          guestbookList.innerHTML = `<div class="guestbook-empty">${getGbText('gbEmpty')}</div>`;
+          return;
+        }
+
+        guestbookList.innerHTML = comments.map(comment => `
+          <div class="guestbook-item">
+            <div class="guestbook-item-header">
+              <span class="guestbook-item-nickname">${escapeHtml(comment.nickname)}</span>
+              <span class="guestbook-item-time">${formatTime(comment.created_at)}</span>
+            </div>
+            <div class="guestbook-item-content">${escapeHtml(comment.content)}</div>
+          </div>
+        `).join('');
+      }
+
+      // 提交留言
+      async function submitGuestbook() {
+        const nickname = guestbookNickname.value.trim();
+        const content = guestbookContent.value.trim();
+
+        if (!nickname || !content) {
+          showMessage(getGbText('gbError'), 'error');
+          return;
+        }
+
+        if (nickname.length > 20) {
+          showMessage(getGbText('gbNickLong'), 'error');
+          return;
+        }
+
+        if (content.length > 500) {
+          showMessage(getGbText('gbContentLong'), 'error');
+          return;
+        }
+
+        guestbookSubmit.disabled = true;
+        const submittingText = currentLang === 'zh' ? '提交中...' : 'Submitting...';
+        guestbookSubmit.textContent = submittingText;
+
+        try {
+          const response = await fetch(GUESTBOOK_API, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ nickname, content })
+          });
+
+          const result = await response.json();
+
+          if (result.success) {
+            // 如果内容被过滤，显示提示
+            if (result.filtered) {
+              const filterMsg = currentLang === 'zh'
+                ? '留言成功，部分内容已被过滤替换'
+                : 'Comment posted, some content was filtered';
+              showMessage(filterMsg, 'success');
+            } else {
+              showMessage(getGbText('gbSuccess'), 'success');
+            }
+            guestbookContent.value = '';
+            loadGuestbook();
+          } else {
+            showMessage(result.message || '留言失败', 'error');
+          }
+        } catch (error) {
+          console.error('提交留言失败:', error);
+          showMessage(getGbText('gbSubmitError'), 'error');
+        } finally {
+          guestbookSubmit.disabled = false;
+          guestbookSubmit.textContent = getGbText('gbSubmit');
+        }
+      }
+
+      // 显示提示消息
+      function showMessage(msg, type) {
+        guestbookMessage.textContent = msg;
+        guestbookMessage.className = `guestbook-message ${type}`;
+        guestbookMessage.style.display = 'block';
+
+        setTimeout(() => {
+          guestbookMessage.style.display = 'none';
+        }, 3000);
+      }
+
+      // 转义HTML防止XSS
+      function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+      }
+
+      // 格式化时间
+      function formatTime(dateStr) {
+        if (!dateStr) return '';
+        const date = new Date(dateStr);
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hour = String(date.getHours()).padStart(2, '0');
+        const minute = String(date.getMinutes()).padStart(2, '0');
+        return `${year}-${month}-${day} ${hour}:${minute}`;
+      }
+
+      // 绑定提交按钮
+      guestbookSubmit.addEventListener('click', submitGuestbook);
+
+      // 回车提交
+      guestbookContent.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && e.ctrlKey) {
+          submitGuestbook();
+        }
+      });
+
+      // 初始加载留言
+      loadGuestbook();
     })();
   </script>
 </body>
