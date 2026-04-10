@@ -43,7 +43,7 @@
 
 ## 部署
 
-本项目部署在 Vercel 平台。
+本项目部署在 Cloudflare Pages 平台。
 
 ---
 
