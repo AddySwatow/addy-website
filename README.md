@@ -61,7 +61,7 @@ addy-website/
 git lfs install
 git clone https://github.com/AddySwatow/addy-website.git
 
-📝 更新日志
+## 📝 更新日志
 时间	更新内容
 2026-04	添加 Shooter 弹弓射击游戏
 2026-04	网站初始化部署
