@@ -270,23 +270,61 @@ function buildDeepAnalysisPrompt(personality) {
     'ISTP': '鉴赏家', 'ISFP': '探险家', 'ESTP': '企业家', 'ESFP': '表演者'
   };
 
-  return `你是MBTI人格分析专家，为${type}类型用户生成深度分析。
+  return `你是MBTI人格深度分析专家，为${type}类型用户生成详细分析报告。
 
-核心特质：${getCoreTraits(type)}
+## 用户信息
+- 人格类型：${type}（${typeNames[type] || ''}型）
+- 维度强度：${personality.EI.tendency}${personality.EI.score}%、${personality.SN.tendency}${personality.SN.score}%、${personality.TF.tendency}${personality.TF.score}%、${personality.JP.tendency}${personality.JP.score}%
 
-维度强度：
-- ${personality.EI.tendency}${personality.EI.score}%
-- ${personality.SN.tendency}${personality.SN.score}%
-- ${personality.TF.tendency}${personality.TF.score}%
-- ${personality.JP.tendency}${personality.JP.score}%
+## 核心特质
+${getCoreTraits(type)}
 
-生成：
-1. 成长路径：18-25岁、26-35岁、36-45岁三阶段建议
-2. 职业匹配：高匹配2个，中匹配1个
-3. 社交建议：优势2个，挑战2个，技巧2个
-4. 名人匹配：3位同类型名人（至少1位中国）
+## 请生成以下内容
 
-返回JSON格式结果。`;
+### 1. 成长路径（三阶段）
+- 18-25岁：核心任务、具体建议（3条）、潜在挑战
+- 26-35岁：核心任务、具体建议（3条）、潜在挑战
+- 36-45岁：核心任务、具体建议（3条）、潜在挑战
+
+### 2. 职业匹配
+- 高匹配职业（2个，匹配度>85%）：职业名、匹配度、理由
+- 中匹配职业（1个，匹配度60-80%）：职业名、匹配度、注意事项
+
+### 3. 社交建议
+- 优势（2条）
+- 挑战（2条）
+- 技巧（2条）
+
+### 4. 名人匹配（3位）
+- 必须是${type}类型的名人
+- 至少1位中国名人
+- 包含：姓名、职业、匹配度、相似特质（3个）、差异点、名言
+
+## 输出格式
+严格返回以下JSON格式：
+{
+  "growthPath": {
+    "stages": [
+      {"ageRange": "18-25岁", "coreTask": "任务", "actionAdvice": ["建议1", "建议2", "建议3"], "challenges": ["挑战1", "挑战2"], "strengthGuidance": "倾向强度影响分析"},
+      {"ageRange": "26-35岁", "coreTask": "任务", "actionAdvice": ["建议1", "建议2", "建议3"], "challenges": ["挑战1", "挑战2"], "strengthGuidance": "倾向强度影响分析"},
+      {"ageRange": "36-45岁", "coreTask": "任务", "actionAdvice": ["建议1", "建议2", "建议3"], "challenges": ["挑战1", "挑战2"], "strengthGuidance": "倾向强度影响分析"}
+    ]
+  },
+  "careerAnalysis": {
+    "topMatches": [{"career": "职业", "matchScore": 90, "reason": "理由"}, {"career": "职业", "matchScore": 88, "reason": "理由"}],
+    "mediumMatch": {"career": "职业", "matchScore": 75, "caution": "注意事项"}
+  },
+  "socialAdvice": {
+    "strengths": ["优势1", "优势2"],
+    "challenges": ["挑战1", "挑战2"],
+    "tips": ["技巧1", "技巧2"]
+  },
+  "celebrityMatches": [
+    {"name": "名人名", "profession": "职业", "matchScore": 90, "similarTraits": ["特质1", "特质2", "特质3"], "difference": "差异点", "quote": "名言"},
+    {"name": "名人名", "profession": "职业", "matchScore": 88, "similarTraits": ["特质1", "特质2", "特质3"], "difference": "差异点", "quote": "名言"},
+    {"name": "名人名", "profession": "职业", "matchScore": 85, "similarTraits": ["特质1", "特质2", "特质3"], "difference": "差异点", "quote": "名言"}
+  ]
+}`;
 }
 
 // ==================== Workers Session存储 ====================

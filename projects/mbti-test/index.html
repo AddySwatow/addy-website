@@ -707,11 +707,42 @@
       transform-origin: left center;
       letter-spacing: 2px;
     }
+    /* 左上角返回主页按钮 */
+    .home-btn {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      background: rgba(102, 126, 234, 0.9);
+      color: white;
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-size: 14px;
+      cursor: pointer;
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+      transition: all 0.2s;
+    }
+    .home-btn:hover {
+      background: rgba(102, 126, 234, 1);
+      transform: scale(1.05);
+    }
+    .home-btn a {
+      color: white;
+      text-decoration: none;
+    }
   </style>
 <!-- html2canvas 用于保存结果为图片 -->
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 </head>
 <body>
+  <!-- 左上角返回主页按钮（始终可见） -->
+  <a href="https://about-addy.pages.dev" class="home-btn">
+    🏠 返回主页
+  </a>
+
   <!-- 页眉温馨提示（白色边框外） -->
   <div style="text-align:center;color:#ffd700;font-size:13px;padding:15px 20px;line-height:1.6;">
     📌 本测试来源于网页 <a href="https://about-addy.pages.dev" target="_blank" style="color:#ffd700;text-decoration:underline;">https://about-addy.pages.dev</a>，全程免费无广放心使用，内容部分由AI分析生成请注意甄别，仅供测试参考不构成建议和商业用途。
