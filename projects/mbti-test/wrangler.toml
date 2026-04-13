@@ -1,0 +1,5 @@
+name = "mbti-api"
+main = "worker.js"
+compatibility_date = "2024-01-01"
+
+# 生产环境变量在Cloudflare后台设置，不在此文件中

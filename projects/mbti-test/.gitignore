@@ -1,0 +1,12 @@
+# 测试日志（仅测试阶段使用，上线时不上传）
+test-logs/
+
+# Node modules
+node_modules/
+
+# 环境变量（密钥文件，绝不上传！）
+.env
+
+# 临时文件
+*.log
+*.tmp

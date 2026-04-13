@@ -1,0 +1,1395 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>动态MBTI人格测试</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .container {
+      background: white;
+      border-radius: 20px;
+      padding: 40px;
+      max-width: 700px;
+      width: 100%;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+    h1 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 10px;
+    }
+    .subtitle {
+      text-align: center;
+      color: #666;
+      margin-bottom: 30px;
+      font-size: 14px;
+    }
+    /* 页眉页底温馨提示 */
+    .disclaimer {
+      background: #fff3cd;
+      border: 1px solid #ffc107;
+      border-radius: 8px;
+      padding: 12px 15px;
+      margin: 20px 0;
+      font-size: 13px;
+      color: #856404;
+      line-height: 1.6;
+    }
+    .disclaimer-header {
+      margin-bottom: 20px;
+    }
+    .disclaimer-footer {
+      margin-top: 25px;
+      text-align: center;
+    }
+    .disclaimer a {
+      color: #667eea;
+      text-decoration: none;
+    }
+    .disclaimer a:hover {
+      text-decoration: underline;
+    }
+
+    /* 版本选择区 */
+    .version-section {
+      margin-bottom: 25px;
+    }
+    .version-section h2 {
+      color: #333;
+      margin-bottom: 15px;
+      font-size: 16px;
+    }
+    .version-cards {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .version-card {
+      background: #f5f7fa;
+      border: 2px solid #ddd;
+      border-radius: 10px;
+      padding: 15px;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+    }
+    .version-card:hover {
+      border-color: #667eea;
+      background: #eef2ff;
+    }
+    .version-card.selected {
+      border-color: #667eea;
+      background: #667eea;
+      color: white;
+    }
+    .version-card .name { font-weight: 600; margin-bottom: 5px; }
+    .version-card .count { font-size: 20px; color: #667eea; }
+    .version-card.selected .count { color: white; }
+    .version-card .time { font-size: 12px; color: #888; }
+    .version-card.selected .time { color: rgba(255,255,255,0.8); }
+    .version-info {
+      background: #e8f4f8;
+      padding: 12px 15px;
+      border-radius: 8px;
+      margin-top: 15px;
+      font-size: 13px;
+      color: #555;
+    }
+    .version-info strong { color: #333; }
+
+    /* 按钮 */
+    .test-btn {
+      background: #667eea;
+      color: white;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      width: 100%;
+      font-size: 14px;
+      transition: background 0.2s;
+    }
+    .test-btn:hover { background: #5a6fd6; }
+    .test-btn.success { background: #28a745; }
+
+    /* 测试区域 */
+    .test-section { display: none; }
+    .progress-bar {
+      background: #eee;
+      height: 10px;
+      border-radius: 5px;
+      margin-bottom: 20px;
+    }
+    .progress-fill {
+      background: linear-gradient(90deg, #667eea, #764ba2);
+      height: 100%;
+      border-radius: 5px;
+      transition: width 0.3s;
+    }
+    .progress-text {
+      text-align: center;
+      color: #666;
+      font-size: 14px;
+      margin-bottom: 15px;
+    }
+    .dimension-badge {
+      display: inline-block;
+      background: #667eea;
+      color: white;
+      padding: 8px 20px;
+      border-radius: 25px;
+      font-size: 14px;
+      margin-bottom: 20px;
+    }
+    .question-text {
+      font-size: 18px;
+      color: #333;
+      margin-bottom: 25px;
+      line-height: 1.6;
+    }
+    .options {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .option-btn {
+      background: white;
+      border: 2px solid #ddd;
+      padding: 15px 20px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: all 0.2s;
+      text-align: left;
+    }
+    .option-btn:hover {
+      border-color: #667eea;
+      background: #f5f7fa;
+    }
+    .option-btn.selected {
+      border-color: #667eea;
+      background: #667eea;
+      color: white;
+    }
+
+    /* AI智能调整提示 */
+    .ai-analysis {
+      background: linear-gradient(135deg, #e8f4f8, #d4edda);
+      padding: 12px 15px;
+      border-radius: 10px;
+      margin-top: 15px;
+      font-size: 13px;
+      color: #28a745;
+      display: none;
+      text-align: center;
+    }
+    .ai-analysis .pulse {
+      display: inline-block;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    /* 结果区域 */
+    .result-section {
+      display: none;
+      position: relative;
+    }
+    .personality-type {
+      font-size: 56px;
+      text-align: center;
+      color: #667eea;
+      font-weight: bold;
+      margin-bottom: 10px;
+      letter-spacing: 5px;
+    }
+    .personality-name {
+      text-align: center;
+      color: #666;
+      font-size: 18px;
+      margin-bottom: 25px;
+    }
+    .dimension-scores {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      margin-bottom: 25px;
+    }
+    .score-card {
+      background: #f5f7fa;
+      padding: 20px;
+      border-radius: 15px;
+      text-align: center;
+    }
+    .score-card .label { font-size: 12px; color: #666; margin-bottom: 5px; }
+    .score-card .value { font-size: 28px; font-weight: bold; color: #333; }
+    .score-card .bar {
+      height: 6px;
+      background: #ddd;
+      border-radius: 3px;
+      margin-top: 10px;
+    }
+    .score-card .bar-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.5s;
+    }
+    .score-card.ei .bar-fill { background: #667eea; }
+    .score-card.sn .bar-fill { background: #28a745; }
+    .score-card.tf .bar-fill { background: #dc3545; }
+    .score-card.jp .bar-fill { background: #ffc107; }
+    .description {
+      background: linear-gradient(135deg, #e8f4f8, #d4edda);
+      padding: 25px;
+      border-radius: 15px;
+      font-size: 15px;
+      line-height: 1.7;
+      color: #333;
+      margin-bottom: 20px;
+    }
+
+    /* Token统计 */
+    .token-stats {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 10px;
+      font-size: 13px;
+      color: #666;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .token-stats h3 { grid-column: 1 / -1; margin-bottom: 5px; font-size: 14px; }
+
+    /* 加载状态 */
+    .loading {
+      text-align: center;
+      padding: 30px;
+      color: #666;
+      display: none;
+    }
+    .spinner {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #667eea;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 15px;
+    }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    /* AI分析回顾 */
+    .ai-review {
+      background: #f8f9fa;
+      padding: 20px;
+      border-radius: 15px;
+      margin-bottom: 20px;
+    }
+    .ai-review h3 {
+      font-size: 16px;
+      color: #333;
+      margin-bottom: 15px;
+    }
+    .timeline {
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    .timeline-item {
+      display: flex;
+      align-items: flex-start;
+      padding: 10px 0;
+      border-bottom: 1px dashed #dee2e6;
+    }
+    .timeline-item:last-child {
+      border-bottom: none;
+    }
+    .timeline-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #667eea;
+      margin-right: 12px;
+      margin-top: 4px;
+    }
+    .timeline-dot.ei { background: #667eea; }
+    .timeline-dot.sn { background: #28a745; }
+    .timeline-dot.tf { background: #dc3545; }
+    .timeline-dot.jp { background: #ffc107; }
+    .timeline-content {
+      flex: 1;
+      font-size: 14px;
+      color: #555;
+    }
+    .timeline-content .dim-tag {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      margin-right: 8px;
+      color: white;
+    }
+    .timeline-content .dim-tag.ei { background: #667eea; }
+    .timeline-content .dim-tag.sn { background: #28a745; }
+    .timeline-content .dim-tag.tf { background: #dc3545; }
+    .timeline-content .dim-tag.jp { background: #ffc107; }
+    .timeline-content .analysis-detail {
+      margin-top: 5px;
+      color: #888;
+      font-size: 13px;
+    }
+
+    /* 成长路径 */
+    .growth-path {
+      background: linear-gradient(135deg, #e8f4f8, #d4edda);
+      padding: 20px;
+      border-radius: 15px;
+      margin-bottom: 20px;
+    }
+    .growth-path h3 {
+      font-size: 16px;
+      color: #333;
+      margin-bottom: 15px;
+    }
+    .growth-timeline {
+      display: block;
+      padding: 10px 0;
+    }
+    .growth-stage {
+      text-align: center;
+      position: relative;
+      z-index: 1;
+    }
+    .growth-stage .dot {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #28a745;
+      margin: 0 auto 8px;
+    }
+    .growth-stage .stage-name {
+      font-size: 12px;
+      color: #666;
+      font-weight: 600;
+    }
+    .growth-stage .stage-task {
+      font-size: 11px;
+      color: #888;
+      max-width: 80px;
+    }
+    /* 竖排成长路径样式 */
+    .growth-stage-vertical {
+      background: white;
+      border-radius: 12px;
+      padding: 15px;
+      margin-bottom: 12px;
+      border-left: 4px solid #28a745;
+    }
+    .growth-stage-vertical .stage-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: #28a745;
+      margin-bottom: 10px;
+    }
+    .growth-stage-vertical .stage-detail {
+      padding-left: 5px;
+    }
+    .growth-stage-vertical .detail-item {
+      font-size: 13px;
+      color: #555;
+      margin-bottom: 6px;
+      line-height: 1.5;
+    }
+    .growth-stage-vertical .detail-item .label {
+      color: #666;
+      font-weight: 500;
+    }
+    .growth-stage-vertical .section-block {
+      margin-bottom: 12px;
+    }
+    .growth-stage-vertical .section-label {
+      font-size: 14px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 6px;
+    }
+    .growth-stage-vertical .section-content {
+      font-size: 13px;
+      color: #555;
+      line-height: 1.6;
+      padding-left: 5px;
+    }
+    .growth-stage-vertical .advice-list .advice-item,
+    .growth-stage-vertical .challenge-list .challenge-item {
+      padding: 4px 0;
+    }
+    .growth-stage-vertical .strength-guide {
+      background: #f0f7f0;
+      padding: 10px;
+      border-radius: 8px;
+      margin-top: 10px;
+    }
+    .growth-stage-vertical .strength-guide .section-label {
+      color: #28a745;
+    }
+    .current-stage {
+      padding: 15px;
+      background: white;
+      border-radius: 10px;
+      margin-top: 15px;
+    }
+    .current-stage .label {
+      font-size: 13px;
+      color: #28a745;
+      font-weight: 600;
+    }
+    .current-stage .advice {
+      font-size: 14px;
+      color: #555;
+      margin-top: 8px;
+    }
+
+    /* 职业匹配 */
+    .career-section {
+      background: #f8f9fa;
+      padding: 20px;
+      border-radius: 15px;
+      margin-bottom: 20px;
+    }
+    .career-section h3 {
+      font-size: 16px;
+      color: #333;
+      margin-bottom: 15px;
+    }
+    .career-card {
+      background: white;
+      padding: 15px;
+      border-radius: 10px;
+      margin-bottom: 12px;
+    }
+    .career-card.high-match {
+      border-left: 4px solid #28a745;
+    }
+    .career-card.medium-match {
+      border-left: 4px solid #ffc107;
+    }
+    .career-card .career-name {
+      font-size: 15px;
+      font-weight: 600;
+      color: #333;
+    }
+    .career-card .match-score {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      background: #28a745;
+      color: white;
+      margin-left: 8px;
+    }
+    .career-card.medium-match .match-score {
+      background: #ffc107;
+    }
+    .career-card .reason {
+      font-size: 13px;
+      color: #666;
+      margin-top: 5px;
+    }
+    .career-card .caution {
+      font-size: 13px;
+      color: #856404;
+      margin-top: 5px;
+    }
+    .career-path {
+      padding: 15px;
+      background: white;
+      border-radius: 10px;
+      margin-top: 15px;
+    }
+    .career-path .label {
+      font-size: 13px;
+      color: #667eea;
+      font-weight: 600;
+    }
+    .career-path .path {
+      font-size: 14px;
+      color: #555;
+      margin-top: 8px;
+    }
+    .career-path .case {
+      font-size: 13px;
+      color: #888;
+      margin-top: 8px;
+      padding: 10px;
+      background: #f5f5f5;
+      border-radius: 5px;
+    }
+
+    /* 社交建议 */
+    .social-section {
+      background: linear-gradient(135deg, #fff3e0, #ffeaa7);
+      padding: 20px;
+      border-radius: 15px;
+      margin-bottom: 20px;
+    }
+    .social-section h3 {
+      font-size: 16px;
+      color: #333;
+      margin-bottom: 15px;
+    }
+    .social-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+    }
+    .social-item {
+      background: white;
+      padding: 15px;
+      border-radius: 10px;
+    }
+    .social-item h4 {
+      font-size: 14px;
+      color: #333;
+      margin-bottom: 8px;
+    }
+    .social-item ul {
+      list-style: none;
+      padding: 0;
+    }
+    .social-item li {
+      font-size: 13px;
+      color: #555;
+      padding: 4px 0;
+    }
+    .social-item li::before {
+      content: '• ';
+      color: #ffc107;
+    }
+
+    /* 名人匹配 */
+    .celebrity-section {
+      background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+      padding: 20px;
+      border-radius: 15px;
+      margin-bottom: 20px;
+    }
+    .celebrity-section h3 {
+      font-size: 16px;
+      color: #333;
+      margin-bottom: 15px;
+    }
+    .celebrity-card {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: flex-start;
+      gap: 15px;
+    }
+    .celebrity-avatar {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: #667eea;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 24px;
+      font-weight: 600;
+    }
+    .celebrity-info {
+      flex: 1;
+    }
+    .celebrity-name {
+      font-size: 16px;
+      font-weight: 600;
+      color: #333;
+    }
+    .celebrity-profession {
+      font-size: 13px;
+      color: #666;
+    }
+    .celebrity-match {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      background: #667eea;
+      color: white;
+      margin-top: 8px;
+    }
+    .celebrity-traits {
+      margin-top: 10px;
+      font-size: 13px;
+    }
+    .trait-tag {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      background: #e8f4f8;
+      color: #667eea;
+      margin-right: 5px;
+    }
+    .celebrity-diff {
+      margin-top: 8px;
+      font-size: 13px;
+      color: #888;
+    }
+    .celebrity-quote {
+      margin-top: 12px;
+      padding: 12px;
+      background: #f5f5f5;
+      border-radius: 8px;
+      font-size: 14px;
+      color: #555;
+      border-left: 3px solid #667eea;
+    }
+
+    /* 加载中提示 */
+    .loading-deep {
+      text-align: center;
+      padding: 30px;
+      color: #666;
+    }
+    .loading-deep .spinner {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #667eea;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 15px;
+    }
+
+    /* 保存按钮样式 */
+    .save-btn {
+      display: none;
+    }
+    .result-section .save-btn {
+      display: block;
+    }
+
+    /* 防盗水印样式（倾斜30度，均匀分布） */
+    .watermark-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1000;
+      overflow: hidden;
+      display: none;
+    }
+    .watermark-line {
+      position: absolute;
+      white-space: nowrap;
+      font-size: 16px;
+      color: rgba(80, 80, 80, 0.12);
+      transform: rotate(-30deg);
+      transform-origin: left center;
+      letter-spacing: 2px;
+    }
+  </style>
+<!-- html2canvas 用于保存结果为图片 -->
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+</head>
+<body>
+  <!-- 页眉温馨提示（白色边框外） -->
+  <div style="text-align:center;color:#ffd700;font-size:13px;padding:15px 20px;line-height:1.6;">
+    📌 本测试来源于网页 <a href="https://about-addy.pages.dev" target="_blank" style="color:#ffd700;text-decoration:underline;">https://about-addy.pages.dev</a>，全程免费无广放心使用，内容部分由AI分析生成请注意甄别，仅供测试参考不构成建议和商业用途。
+  </div>
+
+  <div class="container">
+    <h1>动态MBTI人格测试</h1>
+    <p class="subtitle">AI驱动的智能难度调整 | 多版本可选</p>
+
+    <!-- 版本选择 -->
+    <div class="version-section" id="versionSection">
+      <h2>选择测试版本</h2>
+      <div class="version-cards" id="versionCards"></div>
+      <div class="version-info" id="versionInfo">
+        <strong>标准版（60题）</strong> - 日常自测推荐，约10分钟完成，AI动态调整难度
+      </div>
+
+      <button class="test-btn success" id="startBtn" onclick="startTest()" style="margin-top:20px;">
+        立即开始测试
+      </button>
+    </div>
+
+    <!-- 测试区域 -->
+    <div class="test-section" id="testSection">
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressFill" style="width: 0%;"></div>
+      </div>
+      <div class="progress-text" id="progressText">第 1 题 / 共 60 题</div>
+
+      <div class="question-text" id="questionText">加载中...</div>
+
+      <div class="options" id="optionsContainer"></div>
+
+      <div class="ai-analysis" id="aiAnalysis">
+        <span class="pulse">✨ 系统正在智能调整题目难度...</span>
+      </div>
+
+      <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <span>AI正在分析你的回答模式...</span>
+      </div>
+    </div>
+
+    <!-- 结果区域 -->
+    <div class="result-section" id="resultSection">
+      <div class="personality-type" id="personalityType">INTJ</div>
+      <div class="personality-name" id="personalityName">建筑师型人格</div>
+
+      <div class="dimension-scores">
+        <div class="score-card ei">
+          <div class="label">外向/内向</div>
+          <div class="value" id="eiScore">I 85%</div>
+          <div class="bar"><div class="bar-fill" id="eiBar" style="width:85%"></div></div>
+        </div>
+        <div class="score-card sn">
+          <div class="label">实感/直觉</div>
+          <div class="value" id="snScore">N 72%</div>
+          <div class="bar"><div class="bar-fill" id="snBar" style="width:72%"></div></div>
+        </div>
+        <div class="score-card tf">
+          <div class="label">思考/情感</div>
+          <div class="value" id="tfScore">T 90%</div>
+          <div class="bar"><div class="bar-fill" id="tfBar" style="width:90%"></div></div>
+        </div>
+        <div class="score-card jp">
+          <div class="label">判断/感知</div>
+          <div class="value" id="jpScore">J 78%</div>
+          <div class="bar"><div class="bar-fill" id="jpBar" style="width:78%"></div></div>
+        </div>
+      </div>
+
+      <div class="description" id="personalityDesc">
+        你是一个富有战略思维的人...
+      </div>
+
+      <!-- AI分析回顾 -->
+      <div class="ai-review" id="aiReview" style="display:none;">
+        <h3>🔍 测试过程回顾</h3>
+        <div class="timeline" id="aiTimeline"></div>
+      </div>
+
+      <!-- 成长路径 -->
+      <div class="growth-path" id="growthPath" style="display:none;">
+        <h3>🌱 人格成长路径</h3>
+        <div class="growth-timeline" id="growthTimeline"></div>
+        <div class="current-stage" id="currentStage"></div>
+      </div>
+
+      <!-- 职业匹配 -->
+      <div class="career-section" id="careerSection" style="display:none;">
+        <h3>💼 职业匹配分析</h3>
+        <div id="careerCards"></div>
+        <div class="career-path" id="careerPath"></div>
+      </div>
+
+      <!-- 社交建议 -->
+      <div class="social-section" id="socialSection" style="display:none;">
+        <h3>🤝 社交场景建议</h3>
+        <div class="social-grid" id="socialGrid"></div>
+      </div>
+
+      <!-- 名人匹配 -->
+      <div class="celebrity-section" id="celebritySection" style="display:none;">
+        <h3>🌟 名人匹配</h3>
+        <div id="celebrityCards"></div>
+      </div>
+
+      <!-- 深度分析加载 -->
+      <div class="loading-deep" id="loadingDeep" style="display:none;">
+        <div class="spinner"></div>
+        <span>AI正在生成深度分析...</span>
+      </div>
+
+      <div class="token-stats">
+        <h3>📊 测试统计</h3>
+        <div id="tokenStats">AI调用: 8次</div>
+        <div id="versionStats">版本: 标准版(60题)</div>
+      </div>
+
+      <button class="test-btn" onclick="location.reload()" style="margin-top:20px;">
+        重新测试
+      </button>
+
+      <button class="test-btn save-btn" onclick="saveResult()" style="margin-top:10px; background:#28a745;">
+        💾 保存结果
+      </button>
+
+      <!-- 页底温馨提示 -->
+      <div class="disclaimer disclaimer-footer">
+        📌 本测试来源于网页 <a href="https://about-addy.pages.dev" target="_blank">https://about-addy.pages.dev</a>，全程免费无广放心使用，内容部分由AI分析生成请注意甄别，仅供测试参考不构成建议和商业用途。
+      </div>
+
+      <!-- 防盗水印覆盖层（保存时显示） -->
+      <div class="watermark-overlay" id="watermarkOverlay"></div>
+    </div>
+  </div>
+
+  <script>
+    // Workers API地址
+    const API_BASE = 'https://mbti-api.123519906.workers.dev';
+
+    let sessionId = null;
+    let selectedVersion = 'standard';
+    let aiCallCount = 0;
+    let estimatedTokens = 0;
+    let aiAnalysisHistory = []; // 存储AI分析历史用于回顾
+
+    // 16型人格名称映射
+    const personalityNames = {
+      'INTJ': '建筑师型人格',
+      'INTP': '逻辑学家型人格',
+      'ENTJ': '指挥官型人格',
+      'ENTP': '辩论家型人格',
+      'INFJ': '提倡者型人格',
+      'INFP': '调停者型人格',
+      'ENFJ': '主人公型人格',
+      'ENFP': '竞选者型人格',
+      'ISTJ': '物流师型人格',
+      'ISFJ': '守卫者型人格',
+      'ESTJ': '总经理型人格',
+      'ESFJ': '执政官型人格',
+      'ISTP': '鉴赏家型人格',
+      'ISFP': '探险家型人格',
+      'ESTP': '企业家型人格',
+      'ESFP': '表演者型人格'
+    };
+
+    // 初始化：获取版本列表
+    async function init() {
+      try {
+        const response = await fetch(API_BASE + '/api/versions');
+        const versions = await response.json();
+        renderVersionCards(versions);
+      } catch (error) {
+        console.error('获取版本失败:', error);
+        // 使用默认版本
+        renderVersionCards([
+          { id: 'quick', name: '快速版', questionsPerDimension: 6, timeEstimate: '5分钟' },
+          { id: 'standard', name: '标准版', questionsPerDimension: 15, timeEstimate: '10分钟' },
+          { id: 'professional', name: '专业版', questionsPerDimension: 23, timeEstimate: '15分钟' },
+          { id: 'advanced', name: '进阶版', questionsPerDimension: 36, timeEstimate: '25分钟' },
+          { id: 'complete', name: '完整版', questionsPerDimension: 50, timeEstimate: '35分钟' }
+        ]);
+      }
+    }
+
+    // 渲染版本卡片
+    function renderVersionCards(versions) {
+      const container = document.getElementById('versionCards');
+      container.innerHTML = '';
+
+      versions.forEach(v => {
+        const totalQuestions = v.totalQuestions || Object.values(v.questionsPerDimension || {}).reduce((a, b) => a + b, 0);
+        const card = document.createElement('div');
+        card.className = 'version-card' + (v.id === selectedVersion ? ' selected' : '');
+        card.onclick = () => selectVersion(v);
+        card.innerHTML = `
+          <div class="name">${v.name}</div>
+          <div class="count">${totalQuestions}题</div>
+          <div class="time">${v.timeEstimate}</div>
+        `;
+        container.appendChild(card);
+      });
+
+      // 更新版本信息
+      updateVersionInfo(versions.find(v => v.id === selectedVersion));
+    }
+
+    // 选择版本
+    function selectVersion(version) {
+      selectedVersion = version.id;
+
+      // 更新卡片样式
+      document.querySelectorAll('.version-card').forEach(card => {
+        card.classList.remove('selected');
+      });
+      event.currentTarget.classList.add('selected');
+
+      // 更新版本信息
+      updateVersionInfo(version);
+    }
+
+    // 更新版本信息显示
+    function updateVersionInfo(version) {
+      const totalQuestions = version.totalQuestions || Object.values(version.questionsPerDimension || {}).reduce((a, b) => a + b, 0);
+      document.getElementById('versionInfo').innerHTML = `
+        <strong>${version.name}（${totalQuestions}题）</strong> - ${version.description || '约' + version.timeEstimate + '完成'}
+      `;
+    }
+
+    // 开始测试
+    async function startTest() {
+      try {
+        const response = await fetch(API_BASE + '/api/start', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ version: selectedVersion })
+        });
+
+        const data = await response.json();
+
+        if (data.error) {
+          alert(data.error);
+          return;
+        }
+
+        sessionId = data.sessionId;
+        estimatedTokens = data.version?.estimatedTokens || 8000;
+
+        document.getElementById('versionSection').style.display = 'none';
+        document.getElementById('testSection').style.display = 'block';
+
+        showQuestion(data);
+      } catch (error) {
+        alert('启动测试失败: ' + error.message);
+      }
+    }
+
+    // 显示问题
+    function showQuestion(data) {
+      const question = data.question;
+
+      // 更新进度
+      const progress = (data.progress.current / data.progress.total) * 100;
+      document.getElementById('progressFill').style.width = `${progress}%`;
+      document.getElementById('progressText').textContent =
+        `第 ${data.progress.current} 题 / 共 ${data.progress.total} 题`;
+
+      // 显示问题
+      document.getElementById('questionText').textContent = question.text;
+
+      // 显示选项
+      const optionsContainer = document.getElementById('optionsContainer');
+      optionsContainer.innerHTML = '';
+
+      question.options.forEach((option, index) => {
+        const btn = document.createElement('button');
+        btn.className = 'option-btn';
+        btn.textContent = option;
+        btn.onclick = () => submitAnswer(index, option);
+        optionsContainer.appendChild(btn);
+      });
+
+      // 显示AI智能调整提示（如果有）
+      if (data.aiRecommendation) {
+        // 存储AI分析历史
+        aiAnalysisHistory.push({
+          dimension: data.dimension,
+          questionNumber: data.progress.current,
+          recommendation: data.aiRecommendation
+        });
+
+        const analysisDiv = document.getElementById('aiAnalysis');
+        analysisDiv.style.display = 'block';
+      } else {
+        document.getElementById('aiAnalysis').style.display = 'none';
+      }
+    }
+
+    // 提交回答
+    async function submitAnswer(choiceIndex, choiceText) {
+      // 显示选中状态
+      const buttons = document.querySelectorAll('.option-btn');
+      buttons.forEach(btn => {
+        btn.classList.remove('selected');
+        if (btn.textContent === choiceText) btn.classList.add('selected');
+      });
+
+      // 显示加载
+      document.getElementById('loading').style.display = 'block';
+      document.getElementById('optionsContainer').style.pointerEvents = 'none';
+
+      try {
+        const response = await fetch(API_BASE + '/api/answer', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionId, choiceIndex, choiceText })
+        });
+
+        const data = await response.json();
+
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('optionsContainer').style.pointerEvents = 'auto';
+
+        if (data.completed) {
+          showResult(data);
+        } else {
+          showQuestion(data);
+        }
+      } catch (error) {
+        document.getElementById('loading').style.display = 'none';
+        alert('提交失败: ' + error.message);
+      }
+    }
+
+    // 显示结果
+    function showResult(data) {
+      document.getElementById('testSection').style.display = 'none';
+      document.getElementById('resultSection').style.display = 'block';
+
+      const personality = data.personality;
+      const sessionId = data.sessionId;
+
+      // ========== 第一步：立即显示基础结果 ==========
+
+      // 显示人格类型
+      document.getElementById('personalityType').textContent = personality.finalType;
+      document.getElementById('personalityName').textContent =
+        personalityNames[personality.finalType] || '独特人格';
+
+      // 显示维度分数
+      const scores = [
+        { id: 'ei', data: personality.EI },
+        { id: 'sn', data: personality.SN },
+        { id: 'tf', data: personality.TF },
+        { id: 'jp', data: personality.JP }
+      ];
+
+      scores.forEach(s => {
+        const scoreVal = s.data.score;
+        const tendency = s.data.tendency;
+        document.getElementById(`${s.id}Score`).textContent = `${tendency} ${scoreVal}%`;
+        document.getElementById(`${s.id}Bar`).style.width = `${scoreVal}%`;
+      });
+
+      // 显示描述
+      document.getElementById('personalityDesc').textContent = personality.description;
+
+      // 显示AI分析回顾时间线
+      if (aiAnalysisHistory.length > 0) {
+        document.getElementById('aiReview').style.display = 'block';
+        renderAiTimeline();
+      }
+
+      // 统计
+      document.getElementById('tokenStats').textContent = `AI智能调整: ${aiAnalysisHistory.length}次`;
+      document.getElementById('versionStats').textContent =
+        `版本: ${data.version?.name || '标准版'}(${data.version?.totalQuestions || data.progress?.total || 60}题)`;
+
+      // ========== 第二步：显示加载提示，异步获取深度分析 ==========
+
+      // 显示加载提示
+      document.getElementById('loadingDeep').style.display = 'block';
+
+      // 异步请求深度分析
+      fetchDeepAnalysis(sessionId, personality);
+    }
+
+    // 异步获取深度分析
+    async function fetchDeepAnalysis(sessionId, personality) {
+      try {
+        const response = await fetch(API_BASE + '/api/deep-analysis', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionId, personality })
+        });
+
+        const data = await response.json();
+
+        // 隐藏加载提示
+        document.getElementById('loadingDeep').style.display = 'none';
+
+        if (data.success && data.deepAnalysis) {
+          renderDeepAnalysis(data.deepAnalysis);
+        } else {
+          console.error('深度分析失败:', data.error);
+        }
+      } catch (error) {
+        document.getElementById('loadingDeep').style.display = 'none';
+        console.error('获取深度分析失败:', error);
+      }
+    }
+
+    // 渲染深度分析内容
+    function renderDeepAnalysis(deep) {
+      // 1. 成长路径
+      if (deep.growthPath) {
+        document.getElementById('growthPath').style.display = 'block';
+        renderGrowthPath(deep.growthPath);
+      }
+
+      // 2. 职业匹配
+      if (deep.careerAnalysis) {
+        document.getElementById('careerSection').style.display = 'block';
+        renderCareerAnalysis(deep.careerAnalysis);
+      }
+
+      // 3. 社交建议
+      if (deep.socialAdvice) {
+        document.getElementById('socialSection').style.display = 'block';
+        renderSocialAdvice(deep.socialAdvice);
+      }
+
+      // 4. 名人匹配
+      if (deep.celebrityMatches && deep.celebrityMatches.length > 0) {
+        document.getElementById('celebritySection').style.display = 'block';
+        renderCelebrityMatches(deep.celebrityMatches);
+      }
+    }
+
+    // 渲染成长路径
+    function renderGrowthPath(growth) {
+      const timeline = document.getElementById('growthTimeline');
+      timeline.innerHTML = '';
+
+      growth.stages.forEach(s => {
+        const stage = document.createElement('div');
+        stage.className = 'growth-stage-vertical';
+
+        // 构建建议列表
+        const adviceHtml = s.actionAdvice.map(a => `<div class="advice-item">• ${a}</div>`).join('');
+        // 构建挑战列表
+        const challengesHtml = s.challenges.map(c => `<div class="challenge-item">• ${c}</div>`).join('');
+
+        stage.innerHTML = `
+          <div class="stage-title">${s.ageRange}</div>
+          <div class="stage-detail">
+            <div class="section-block">
+              <div class="section-label">🎯 核心发展任务</div>
+              <div class="section-content">${s.coreTask}</div>
+            </div>
+            <div class="section-block">
+              <div class="section-label">💡 具体行动建议</div>
+              <div class="section-content advice-list">${adviceHtml}</div>
+            </div>
+            <div class="section-block">
+              <div class="section-label">⚠️ 潜在挑战预警</div>
+              <div class="section-content challenge-list">${challengesHtml}</div>
+            </div>
+            <div class="section-block strength-guide">
+              <div class="section-label">📊 倾向强度影响</div>
+              <div class="section-content">${s.strengthGuidance}</div>
+            </div>
+          </div>
+        `;
+        timeline.appendChild(stage);
+      });
+
+      // 隐藏通用建议区域
+      const current = document.getElementById('currentStage');
+      current.innerHTML = `
+        <div class="hint" style="color:#666;font-size:13px;padding:10px 0;">请根据您的年龄阶段，对照查看详细的发展建议</div>
+      `;
+    }
+
+    // 渲染职业匹配
+    function renderCareerAnalysis(career) {
+      const cards = document.getElementById('careerCards');
+      cards.innerHTML = '';
+
+      // 高匹配职业
+      career.topMatches.forEach(c => {
+        const card = document.createElement('div');
+        card.className = 'career-card high-match';
+        card.innerHTML = `
+          <div class="career-name">${c.career} <span class="match-score">${c.matchScore}%</span></div>
+          <div class="reason">✅ ${c.reason}</div>
+        `;
+        cards.appendChild(card);
+      });
+
+      // 中匹配职业
+      if (career.mediumMatch) {
+        const card = document.createElement('div');
+        card.className = 'career-card medium-match';
+        card.innerHTML = `
+          <div class="career-name">${career.mediumMatch.career} <span class="match-score">${career.mediumMatch.matchScore}%</span></div>
+          <div class="caution">⚠️ ${career.mediumMatch.caution}</div>
+        `;
+        cards.appendChild(card);
+      }
+
+      // 隐藏发展路径区域
+      const path = document.getElementById('careerPath');
+      if (path) path.style.display = 'none';
+    }
+
+    // 渲染社交建议
+    function renderSocialAdvice(social) {
+      const grid = document.getElementById('socialGrid');
+      grid.innerHTML = '';
+
+      // 优势
+      const strengths = document.createElement('div');
+      strengths.className = 'social-item';
+      strengths.innerHTML = `
+        <h4>✅ 社交优势</h4>
+        <ul>${social.strengths.map(s => `<li>${s}</li>`).join('')}</ul>
+      `;
+      grid.appendChild(strengths);
+
+      // 挑战
+      const challenges = document.createElement('div');
+      challenges.className = 'social-item';
+      challenges.innerHTML = `
+        <h4>⚠️ 社交挑战</h4>
+        <ul>${social.challenges.map(c => `<li>${c}</li>`).join('')}</ul>
+      `;
+      grid.appendChild(challenges);
+
+      // 建议
+      const tips = document.createElement('div');
+      tips.className = 'social-item';
+      tips.style.gridColumn = '1 / -1';
+      tips.innerHTML = `
+        <h4>💡 社交技巧</h4>
+        <ul>${social.tips.map(t => `<li>${t}</li>`).join('')}</ul>
+      `;
+      grid.appendChild(tips);
+    }
+
+    // 渲染名人匹配
+    function renderCelebrityMatches(celebrities) {
+      const cards = document.getElementById('celebrityCards');
+      cards.innerHTML = '';
+
+      celebrities.forEach(c => {
+        // 用名字首字母作为头像
+        const initial = c.name.charAt(0);
+
+        const card = document.createElement('div');
+        card.className = 'celebrity-card';
+        card.innerHTML = `
+          <div class="celebrity-avatar">${initial}</div>
+          <div class="celebrity-info">
+            <div class="celebrity-name">${c.name}</div>
+            <div class="celebrity-profession">${c.profession}</div>
+            <div class="celebrity-match">匹配度 ${c.matchScore}%</div>
+            <div class="celebrity-traits">
+              ${c.similarTraits.map(t => `<span class="trait-tag">${t}</span>`).join('')}
+            </div>
+            <div class="celebrity-diff">🔍 ${c.difference}</div>
+            <div class="celebrity-quote">"${c.quote}"</div>
+          </div>
+        `;
+        cards.appendChild(card);
+      });
+    }
+
+    // 渲染AI分析回顾时间线
+    function renderAiTimeline() {
+      const timeline = document.getElementById('aiTimeline');
+      timeline.innerHTML = '';
+
+      const dimLabels = {
+        'EI': '外向/内向',
+        'SN': '实感/直觉',
+        'TF': '思考/情感',
+        'JP': '判断/感知'
+      };
+
+      const difficultyLabels = {
+        'easy': '简单',
+        'medium': '中等',
+        'hard': '困难'
+      };
+
+      aiAnalysisHistory.forEach(item => {
+        const dimKey = item.dimension.toLowerCase();
+        const div = document.createElement('div');
+        div.className = 'timeline-item';
+        div.innerHTML = `
+          <div class="timeline-dot ${dimKey}"></div>
+          <div class="timeline-content">
+            <span class="dim-tag ${dimKey}">${item.dimension}</span>
+            第${item.questionNumber}题后分析
+            <div class="analysis-detail">
+              一致性: ${item.recommendation.consistency}% →
+              下题难度: ${difficultyLabels[item.recommendation.nextDifficulty] || item.recommendation.nextDifficulty} →
+              ${item.recommendation.reason}
+            </div>
+          </div>
+        `;
+        timeline.appendChild(div);
+      });
+    }
+
+    // 页面加载完成后初始化
+    init();
+
+    // 保存结果为图片
+    async function saveResult() {
+      // 获取人格类型用于文件名
+      const personalityType = document.getElementById('personalityType').textContent;
+
+      // 显示水印：方案C - 每行2次文字，10行均匀分布，奇偶行交错偏移
+      const watermarkOverlay = document.getElementById('watermarkOverlay');
+      watermarkOverlay.innerHTML = '';
+      watermarkOverlay.style.display = 'block';
+
+      const watermarkText = '测试来源于网页https://about-addy.pages.dev/';
+      const resultSection = document.getElementById('resultSection');
+      const sectionHeight = resultSection.offsetHeight;
+      const lineHeight = sectionHeight / 10; // 10行间距
+
+      for (let i = 0; i < 10; i++) {
+        const line = document.createElement('div');
+        line.className = 'watermark-line';
+        // 每行重复2次，中间加空格分隔
+        line.textContent = watermarkText + '    ' + watermarkText;
+
+        // 奇偶行交错偏移150px
+        const offsetX = (i % 2 === 0) ? -100 : 50;
+        line.style.left = offsetX + 'px';
+
+        // 纵向均匀分布
+        line.style.top = (lineHeight * i + lineHeight / 2) + 'px';
+
+        watermarkOverlay.appendChild(line);
+      }
+
+      // 隐藏按钮（不保存到图片中）
+      document.querySelectorAll('.test-btn').forEach(el => el.style.visibility = 'hidden');
+
+      try {
+        // 使用 html2canvas 截图
+        const canvas = await html2canvas(resultSection, {
+          scale: 2,
+          backgroundColor: '#ffffff',
+          logging: false,
+          useCORS: true
+        });
+
+        // 导出为 PNG 图片
+        const link = document.createElement('a');
+        link.download = `MBTI测试结果-${personalityType}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      } catch (error) {
+        alert('保存失败，请重试');
+        console.error('保存失败:', error);
+      }
+
+      // 恢复元素状态
+      watermarkOverlay.style.display = 'none';
+      watermarkOverlay.innerHTML = '';
+      document.querySelectorAll('.test-btn').forEach(el => el.style.visibility = 'visible');
+    }
+  </script>
+</body>
+</html>
