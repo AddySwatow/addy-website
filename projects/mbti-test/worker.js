@@ -552,18 +552,22 @@ export default {
         }), { headers: corsHeaders });
       }
 
-      // POST /api/deep-analysis - 深度分析
+      // POST /api/deep-analysis - 深度分析（不需要session验证）
       if (path === '/api/deep-analysis' && request.method === 'POST') {
         const body = await request.json();
-        const { sessionId, personality } = body;
-        const session = sessions[sessionId];
+        const { personality } = body;
 
-        if (!session) {
-          return new Response(JSON.stringify({ error: '会话不存在' }), { headers: corsHeaders });
+        if (!personality) {
+          return new Response(JSON.stringify({ success: false, error: '缺少人格数据' }), { headers: corsHeaders });
         }
 
         try {
           const apiKey = env.ZHIPU_API_KEY;
+
+          if (!apiKey) {
+            return new Response(JSON.stringify({ success: false, error: 'API密钥未配置' }), { headers: corsHeaders });
+          }
+
           const deepPrompt = buildDeepAnalysisPrompt(personality);
           const deepResult = await callAI(apiKey, deepPrompt, 2500);
           const deepAnalysis = parseAIJSON(deepResult);
