@@ -922,14 +922,24 @@
   </div>
 
   <script>
-    // Workers API地址 - 改为同域名Pages Functions
+    // API地址 - 同域名Pages Functions
     const API_BASE = '/api/mbti';
 
-    let sessionId = null;
+    // 测试状态（存储在localStorage）
+    let testState = {
+      version: null,
+      versionInfo: null,
+      currentDimension: null,
+      currentQuestion: null,
+      history: [],
+      usedQuestionIds: [],
+      questionsPerDimension: null,
+      totalQuestions: 0,
+      aiCallInterval: 5
+    };
+
+    let aiAnalysisHistory = [];
     let selectedVersion = 'standard';
-    let aiCallCount = 0;
-    let estimatedTokens = 0;
-    let aiAnalysisHistory = []; // 存储AI分析历史用于回顾
 
     // 16型人格名称映射
     const personalityNames = {
@@ -960,40 +970,84 @@
       'complete': { id: 'complete', name: '完整版', totalQuestions: 200, timeEstimate: '35分钟', description: '最完整的人格画像，约35分钟完成' }
     };
 
-    // 处理默认版本卡片选择（页面加载时立即可用）
+    // 保存测试状态到localStorage
+    function saveTestState() {
+      localStorage.setItem('mbti_test_state', JSON.stringify(testState));
+      localStorage.setItem('mbti_ai_history', JSON.stringify(aiAnalysisHistory));
+    }
+
+    // 从localStorage恢复测试状态
+    function loadTestState() {
+      const saved = localStorage.getItem('mbti_test_state');
+      if (saved) {
+        testState = JSON.parse(saved);
+        aiAnalysisHistory = JSON.parse(localStorage.getItem('mbti_ai_history') || '[]');
+        return true;
+      }
+      return false;
+    }
+
+    // 清除测试状态
+    function clearTestState() {
+      localStorage.removeItem('mbti_test_state');
+      localStorage.removeItem('mbti_ai_history');
+      testState = {
+        version: null,
+        versionInfo: null,
+        currentDimension: null,
+        currentQuestion: null,
+        history: [],
+        usedQuestionIds: [],
+        questionsPerDimension: null,
+        totalQuestions: 0,
+        aiCallInterval: 5
+      };
+      aiAnalysisHistory = [];
+    }
+
+    // 处理默认版本卡片选择
     function selectDefaultVersion(versionId, element) {
       selectedVersion = versionId;
-
-      // 更新卡片样式
       document.querySelectorAll('.version-card').forEach(card => {
         card.classList.remove('selected');
       });
       element.classList.add('selected');
-
-      // 更新版本信息
       const version = defaultVersions[versionId];
       document.getElementById('versionInfo').innerHTML = `
         <strong>${version.name}（${version.totalQuestions}题）</strong> - ${version.description}
       `;
     }
 
-    // 初始化：获取版本列表
+    // 初始化
     async function init() {
+      // 检查是否有保存的进度
+      if (loadTestState() && testState.currentQuestion && testState.history.length > 0) {
+        // 有保存进度，询问是否继续
+        const continueTest = confirm(`发现未完成的测试进度（已完成${testState.history.length}/${testState.totalQuestions}题），是否继续？`);
+        if (continueTest) {
+          document.getElementById('versionSection').style.display = 'none';
+          document.getElementById('testSection').style.display = 'block';
+          showQuestionFromState();
+          return;
+        } else {
+          clearTestState();
+        }
+      }
+
+      // 正常初始化，获取版本列表
       try {
-        const response = await fetch(API_BASE + '/api/versions');
+        const response = await fetch(API_BASE + '/versions');
         const versions = await response.json();
         renderVersionCards(versions);
       } catch (error) {
         console.error('获取版本失败:', error);
-        // 使用默认版本 - 卡片已存在于HTML中，无需重新渲染
       }
     }
 
-    // 渲染版本卡片（从API获取后更新）
+    // 渲染版本卡片
     function renderVersionCards(versions) {
       const container = document.getElementById('versionCards');
       container.innerHTML = '';
-
       versions.forEach(v => {
         const totalQuestions = v.totalQuestions || Object.values(v.questionsPerDimension || {}).reduce((a, b) => a + b, 0);
         const card = document.createElement('div');
@@ -1006,26 +1060,20 @@
         `;
         container.appendChild(card);
       });
-
-      // 更新版本信息
       updateVersionInfo(versions.find(v => v.id === selectedVersion));
     }
 
     // 选择版本
     function selectVersion(version) {
       selectedVersion = version.id;
-
-      // 更新卡片样式
       document.querySelectorAll('.version-card').forEach(card => {
         card.classList.remove('selected');
       });
       event.currentTarget.classList.add('selected');
-
-      // 更新版本信息
       updateVersionInfo(version);
     }
 
-    // 更新版本信息显示
+    // 更新版本信息
     function updateVersionInfo(version) {
       const totalQuestions = version.totalQuestions || Object.values(version.questionsPerDimension || {}).reduce((a, b) => a + b, 0);
       document.getElementById('versionInfo').innerHTML = `
@@ -1033,10 +1081,30 @@
       `;
     }
 
+    // 从状态显示问题（恢复进度时）
+    function showQuestionFromState() {
+      const question = testState.currentQuestion;
+      const progress = (testState.history.length + 1) / testState.totalQuestions * 100;
+      document.getElementById('progressFill').style.width = `${progress}%`;
+      document.getElementById('progressText').textContent =
+        `第 ${testState.history.length + 1} 题 / 共 ${testState.totalQuestions} 题`;
+      document.getElementById('questionText').textContent = question.text;
+      const optionsContainer = document.getElementById('optionsContainer');
+      optionsContainer.innerHTML = '';
+      question.options.forEach((option, index) => {
+        const btn = document.createElement('button');
+        btn.className = 'option-btn';
+        btn.textContent = option;
+        btn.onclick = () => submitAnswer(index, option);
+        optionsContainer.appendChild(btn);
+      });
+      document.getElementById('aiAnalysis').style.display = 'none';
+    }
+
     // 开始测试
     async function startTest() {
       try {
-        const response = await fetch(API_BASE + '/api/start', {
+        const response = await fetch(API_BASE + '/start', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ version: selectedVersion })
@@ -1045,12 +1113,23 @@
         const data = await response.json();
 
         if (data.error) {
-          alert(data.error);
+          alert('启动失败: ' + data.error);
           return;
         }
 
-        sessionId = data.sessionId;
-        estimatedTokens = data.version?.estimatedTokens || 8000;
+        // 初始化测试状态
+        testState.version = selectedVersion;
+        testState.versionInfo = data.version;
+        testState.currentDimension = data.dimension;
+        testState.currentQuestion = data.question;
+        testState.questionsPerDimension = data.questionsPerDimension;
+        testState.totalQuestions = data.totalQuestions;
+        testState.aiCallInterval = data.aiCallInterval;
+        testState.history = [];
+        testState.usedQuestionIds = [];
+
+        // 保存到localStorage
+        saveTestState();
 
         document.getElementById('versionSection').style.display = 'none';
         document.getElementById('testSection').style.display = 'block';
@@ -1063,21 +1142,35 @@
 
     // 显示问题
     function showQuestion(data) {
-      const question = data.question;
+      if (data.error) {
+        alert('测试出错: ' + data.error);
+        return;
+      }
 
-      // 更新进度
+      // 更新状态
+      if (data.question) {
+        testState.currentQuestion = data.question;
+        testState.currentDimension = data.dimension;
+      }
+      if (data.history) {
+        testState.history = data.history;
+      }
+      if (data.usedQuestionIds) {
+        testState.usedQuestionIds = data.usedQuestionIds;
+      }
+
+      // 保存状态
+      saveTestState();
+
+      const question = data.question;
       const progress = (data.progress.current / data.progress.total) * 100;
       document.getElementById('progressFill').style.width = `${progress}%`;
       document.getElementById('progressText').textContent =
         `第 ${data.progress.current} 题 / 共 ${data.progress.total} 题`;
-
-      // 显示问题
       document.getElementById('questionText').textContent = question.text;
 
-      // 显示选项
       const optionsContainer = document.getElementById('optionsContainer');
       optionsContainer.innerHTML = '';
-
       question.options.forEach((option, index) => {
         const btn = document.createElement('button');
         btn.className = 'option-btn';
@@ -1086,17 +1179,14 @@
         optionsContainer.appendChild(btn);
       });
 
-      // 显示AI智能调整提示（如果有）
       if (data.aiRecommendation) {
-        // 存储AI分析历史
         aiAnalysisHistory.push({
           dimension: data.dimension,
           questionNumber: data.progress.current,
           recommendation: data.aiRecommendation
         });
-
-        const analysisDiv = document.getElementById('aiAnalysis');
-        analysisDiv.style.display = 'block';
+        saveTestState();
+        document.getElementById('aiAnalysis').style.display = 'block';
       } else {
         document.getElementById('aiAnalysis').style.display = 'none';
       }
@@ -1104,22 +1194,28 @@
 
     // 提交回答
     async function submitAnswer(choiceIndex, choiceText) {
-      // 显示选中状态
       const buttons = document.querySelectorAll('.option-btn');
       buttons.forEach(btn => {
         btn.classList.remove('selected');
         if (btn.textContent === choiceText) btn.classList.add('selected');
       });
 
-      // 显示加载
       document.getElementById('loading').style.display = 'block';
       document.getElementById('optionsContainer').style.pointerEvents = 'none';
 
       try {
-        const response = await fetch(API_BASE + '/api/answer', {
+        // 发送完整历史数据
+        const response = await fetch(API_BASE + '/answer', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ sessionId, choiceIndex, choiceText })
+          body: JSON.stringify({
+            history: testState.history,
+            currentDimension: testState.currentDimension,
+            currentQuestion: testState.currentQuestion,
+            version: testState.version,
+            choiceIndex,
+            choiceText
+          })
         });
 
         const data = await response.json();
@@ -1127,7 +1223,14 @@
         document.getElementById('loading').style.display = 'none';
         document.getElementById('optionsContainer').style.pointerEvents = 'auto';
 
+        if (data.error) {
+          alert('测试出错: ' + data.error + '\n请刷新页面重新开始。');
+          return;
+        }
+
         if (data.completed) {
+          // 测试完成，清除保存的状态
+          clearTestState();
           showResult(data);
         } else {
           showQuestion(data);
@@ -1140,20 +1243,22 @@
 
     // 显示结果
     function showResult(data) {
+      if (!data.personality) {
+        alert('测试结果生成失败，请刷新页面重新开始。');
+        document.getElementById('testSection').style.display = 'none';
+        document.getElementById('versionSection').style.display = 'block';
+        return;
+      }
+
       document.getElementById('testSection').style.display = 'none';
       document.getElementById('resultSection').style.display = 'block';
 
       const personality = data.personality;
-      const sessionId = data.sessionId;
 
-      // ========== 第一步：立即显示基础结果 ==========
-
-      // 显示人格类型
       document.getElementById('personalityType').textContent = personality.finalType;
       document.getElementById('personalityName').textContent =
         personalityNames[personality.finalType] || '独特人格';
 
-      // 显示维度分数
       const scores = [
         { id: 'ei', data: personality.EI },
         { id: 'sn', data: personality.SN },
@@ -1168,95 +1273,74 @@
         document.getElementById(`${s.id}Bar`).style.width = `${scoreVal}%`;
       });
 
-      // 显示描述
       document.getElementById('personalityDesc').textContent = personality.description;
 
-      // 显示AI分析回顾时间线
       if (aiAnalysisHistory.length > 0) {
         document.getElementById('aiReview').style.display = 'block';
         renderAiTimeline();
       }
 
-      // 统计
       document.getElementById('tokenStats').textContent = `AI智能调整: ${aiAnalysisHistory.length}次`;
       document.getElementById('versionStats').textContent =
-        `版本: ${data.version?.name || '标准版'}(${data.version?.totalQuestions || data.progress?.total || 60}题)`;
+        `版本: ${data.version?.name || '标准版'}(${data.version?.totalQuestions || testState.totalQuestions || 60}题)`;
 
-      // ========== 第二步：显示加载提示，异步获取深度分析 ==========
-
-      // 显示加载提示
       document.getElementById('loadingDeep').style.display = 'block';
-
-      // 异步请求深度分析
-      fetchDeepAnalysis(sessionId, personality);
+      fetchDeepAnalysis(personality);
     }
 
-    // 异步获取深度分析
-    async function fetchDeepAnalysis(sessionId, personality) {
+    // 获取深度分析
+    let currentPersonality = null;
+
+    async function fetchDeepAnalysis(personality) {
+      currentPersonality = personality;
       try {
-        const response = await fetch(API_BASE + '/api/deep-analysis', {
+        const response = await fetch(API_BASE + '/deep-analysis', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ sessionId, personality })
+          body: JSON.stringify({ personality })
         });
 
         const data = await response.json();
 
-        // 隐藏加载提示
         document.getElementById('loadingDeep').style.display = 'none';
 
         if (data.success && data.deepAnalysis) {
           renderDeepAnalysis(data.deepAnalysis);
-          // 隐藏错误提示（如果之前显示过）
           document.getElementById('deepError').style.display = 'none';
         } else {
-          // 显示错误提示
           document.getElementById('deepError').style.display = 'block';
           document.getElementById('deepErrorMsg').textContent = data.error || 'AI分析返回格式异常';
-          console.error('深度分析失败:', data.error);
         }
       } catch (error) {
         document.getElementById('loadingDeep').style.display = 'none';
-        // 显示错误提示
         document.getElementById('deepError').style.display = 'block';
-        document.getElementById('deepErrorMsg').textContent = error.message || '网络请求失败，请检查网络连接';
-        console.error('获取深度分析失败:', error);
+        document.getElementById('deepErrorMsg').textContent = error.message || '网络请求失败';
       }
     }
-
-    // 存储当前人格数据用于重试
-    let currentPersonality = null;
 
     // 重试深度分析
     async function retryDeepAnalysis() {
       document.getElementById('deepError').style.display = 'none';
       document.getElementById('loadingDeep').style.display = 'block';
       if (currentPersonality) {
-        await fetchDeepAnalysis(sessionId, currentPersonality);
+        await fetchDeepAnalysis(currentPersonality);
       }
     }
 
-    // 渲染深度分析内容
+    // 渲染深度分析
     function renderDeepAnalysis(deep) {
-      // 1. 成长路径
       if (deep.growthPath) {
         document.getElementById('growthPath').style.display = 'block';
         renderGrowthPath(deep.growthPath);
       }
-
-      // 2. 职业匹配
       if (deep.careerAnalysis) {
         document.getElementById('careerSection').style.display = 'block';
         renderCareerAnalysis(deep.careerAnalysis);
       }
-
-      // 3. 社交建议
       if (deep.socialAdvice) {
         document.getElementById('socialSection').style.display = 'block';
         renderSocialAdvice(deep.socialAdvice);
       }
-
-      // 4. 名人匹配
       if (deep.celebrityMatches && deep.celebrityMatches.length > 0) {
         document.getElementById('celebritySection').style.display = 'block';
         renderCelebrityMatches(deep.celebrityMatches);
@@ -1267,16 +1351,11 @@
     function renderGrowthPath(growth) {
       const timeline = document.getElementById('growthTimeline');
       timeline.innerHTML = '';
-
       growth.stages.forEach(s => {
         const stage = document.createElement('div');
         stage.className = 'growth-stage-vertical';
-
-        // 构建建议列表
         const adviceHtml = s.actionAdvice.map(a => `<div class="advice-item">• ${a}</div>`).join('');
-        // 构建挑战列表
         const challengesHtml = s.challenges.map(c => `<div class="challenge-item">• ${c}</div>`).join('');
-
         stage.innerHTML = `
           <div class="stage-title">${s.ageRange}</div>
           <div class="stage-detail">
@@ -1300,8 +1379,6 @@
         `;
         timeline.appendChild(stage);
       });
-
-      // 隐藏通用建议区域
       const current = document.getElementById('currentStage');
       current.innerHTML = `
         <div class="hint" style="color:#666;font-size:13px;padding:10px 0;">请根据您的年龄阶段，对照查看详细的发展建议</div>
@@ -1312,8 +1389,6 @@
     function renderCareerAnalysis(career) {
       const cards = document.getElementById('careerCards');
       cards.innerHTML = '';
-
-      // 高匹配职业
       career.topMatches.forEach(c => {
         const card = document.createElement('div');
         card.className = 'career-card high-match';
@@ -1323,8 +1398,6 @@
         `;
         cards.appendChild(card);
       });
-
-      // 中匹配职业
       if (career.mediumMatch) {
         const card = document.createElement('div');
         card.className = 'career-card medium-match';
@@ -1334,8 +1407,6 @@
         `;
         cards.appendChild(card);
       }
-
-      // 隐藏发展路径区域
       const path = document.getElementById('careerPath');
       if (path) path.style.display = 'none';
     }
@@ -1344,8 +1415,6 @@
     function renderSocialAdvice(social) {
       const grid = document.getElementById('socialGrid');
       grid.innerHTML = '';
-
-      // 优势
       const strengths = document.createElement('div');
       strengths.className = 'social-item';
       strengths.innerHTML = `
@@ -1353,8 +1422,6 @@
         <ul>${social.strengths.map(s => `<li>${s}</li>`).join('')}</ul>
       `;
       grid.appendChild(strengths);
-
-      // 挑战
       const challenges = document.createElement('div');
       challenges.className = 'social-item';
       challenges.innerHTML = `
@@ -1362,8 +1429,6 @@
         <ul>${social.challenges.map(c => `<li>${c}</li>`).join('')}</ul>
       `;
       grid.appendChild(challenges);
-
-      // 建议
       const tips = document.createElement('div');
       tips.className = 'social-item';
       tips.style.gridColumn = '1 / -1';
@@ -1378,11 +1443,8 @@
     function renderCelebrityMatches(celebrities) {
       const cards = document.getElementById('celebrityCards');
       cards.innerHTML = '';
-
       celebrities.forEach(c => {
-        // 用名字首字母作为头像
         const initial = c.name.charAt(0);
-
         const card = document.createElement('div');
         card.className = 'celebrity-card';
         card.innerHTML = `
@@ -1402,24 +1464,21 @@
       });
     }
 
-    // 渲染AI分析回顾时间线
+    // 渲染AI分析回顾
     function renderAiTimeline() {
       const timeline = document.getElementById('aiTimeline');
       timeline.innerHTML = '';
-
       const dimLabels = {
         'EI': '外向/内向',
         'SN': '实感/直觉',
         'TF': '思考/情感',
         'JP': '判断/感知'
       };
-
       const difficultyLabels = {
         'easy': '简单',
         'medium': '中等',
         'hard': '困难'
       };
-
       aiAnalysisHistory.forEach(item => {
         const dimKey = item.dimension.toLowerCase();
         const div = document.createElement('div');
@@ -1440,63 +1499,43 @@
       });
     }
 
-    // 页面加载完成后初始化
+    // 页面加载初始化
     init();
 
     // 保存结果为图片
     async function saveResult() {
-      // 获取人格类型用于文件名
       const personalityType = document.getElementById('personalityType').textContent;
-
-      // 显示水印：方案C - 每行2次文字，10行均匀分布，奇偶行交错偏移
       const watermarkOverlay = document.getElementById('watermarkOverlay');
       watermarkOverlay.innerHTML = '';
       watermarkOverlay.style.display = 'block';
-
       const watermarkText = '测试来源于网页https://about-addy.pages.dev/';
       const resultSection = document.getElementById('resultSection');
       const sectionHeight = resultSection.offsetHeight;
-      const lineHeight = sectionHeight / 10; // 10行间距
-
+      const lineHeight = sectionHeight / 10;
       for (let i = 0; i < 10; i++) {
         const line = document.createElement('div');
         line.className = 'watermark-line';
-        // 每行重复2次，中间加空格分隔
         line.textContent = watermarkText + '    ' + watermarkText;
-
-        // 奇偶行交错偏移150px
         const offsetX = (i % 2 === 0) ? -100 : 50;
         line.style.left = offsetX + 'px';
-
-        // 纵向均匀分布
         line.style.top = (lineHeight * i + lineHeight / 2) + 'px';
-
         watermarkOverlay.appendChild(line);
       }
-
-      // 隐藏按钮（不保存到图片中）
       document.querySelectorAll('.test-btn').forEach(el => el.style.visibility = 'hidden');
-
       try {
-        // 使用 html2canvas 截图
         const canvas = await html2canvas(resultSection, {
           scale: 2,
           backgroundColor: '#ffffff',
           logging: false,
           useCORS: true
         });
-
-        // 导出为 PNG 图片
         const link = document.createElement('a');
         link.download = `MBTI测试结果-${personalityType}.png`;
         link.href = canvas.toDataURL('image/png');
         link.click();
       } catch (error) {
         alert('保存失败，请重试');
-        console.error('保存失败:', error);
       }
-
-      // 恢复元素状态
       watermarkOverlay.style.display = 'none';
       watermarkOverlay.innerHTML = '';
       document.querySelectorAll('.test-btn').forEach(el => el.style.visibility = 'visible');

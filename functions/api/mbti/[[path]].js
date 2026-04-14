@@ -1,8 +1,9 @@
 // ============================================
-// MBTI 测试 API - Pages Functions 版本
+// MBTI 测试 API - Pages Functions 版本（客户端存储模式）
+// 不依赖session，每次请求携带完整历史数据
 // ============================================
 
-// ==================== 内联 questions.js ====================
+// ==================== 题库数据 ====================
 const questions = {
   EI: {
     easy: [
@@ -171,9 +172,6 @@ const personalityTraits = {
   'ESTP': '外向实感思考感知 - 行动派冒险家、应变能力强、追求刺激、冲动决策',
   'ESFP': '外向实感情感感知 - 热情表演者、感染力强、享受当下、缺乏长远规划'
 };
-
-// Session存储（内存）
-let sessions = {};
 
 // ==================== 辅助函数 ====================
 
@@ -431,7 +429,7 @@ export async function onRequest(context) {
       return jsonResponse(getAllVersions());
     }
 
-    // POST /api/mbti/start - 开始测试
+    // POST /api/mbti/start - 开始测试（只返回第一题，不创建session）
     if (path.includes('/start') && request.method === 'POST') {
       const body = await request.json();
       const version = body.version || 'standard';
@@ -441,142 +439,153 @@ export async function onRequest(context) {
         return jsonResponse({ error: '无效的版本' });
       }
 
-      const sessionId = Date.now().toString();
       const dimensions = getDimensions();
       const questionsPerDimension = versionInfo.questionsPerDimension;
 
       const firstDimension = selectRandomDimension([], questionsPerDimension, dimensions);
       const firstQuestion = getQuestion(firstDimension, 'medium');
 
-      sessions[sessionId] = {
-        history: [],
-        currentDimension: firstDimension,
-        usedQuestionIds: [],
-        currentQuestion: firstQuestion,
-        version,
-        versionInfo,
-        questionsPerDimension,
-        totalQuestions: versionInfo.totalQuestions,
-        aiCallInterval: versionInfo.aiCallInterval
-      };
-
+      // 返回第一题信息，前端自行存储
       return jsonResponse({
-        sessionId,
         version: versionInfo,
         dimension: firstDimension,
         question: firstQuestion,
+        questionsPerDimension,
+        totalQuestions: versionInfo.totalQuestions,
+        aiCallInterval: versionInfo.aiCallInterval,
         progress: { current: 1, total: versionInfo.totalQuestions }
       });
     }
 
-    // POST /api/mbti/answer - 提交答案
+    // POST /api/mbti/answer - 提交答案（接收完整历史数据）
     if (path.includes('/answer') && request.method === 'POST') {
       const body = await request.json();
-      const { sessionId, choiceIndex, choiceText } = body;
-      const session = sessions[sessionId];
+      const {
+        history,           // 完整历史记录
+        currentDimension,  // 当前维度
+        currentQuestion,   // 当前题目
+        version,           // 版本信息
+        choiceIndex,       // 本次选择
+        choiceText         // 本次选择文本
+      } = body;
 
-      if (!session) {
-        return jsonResponse({ error: '会话不存在' });
+      if (!history || !Array.isArray(history)) {
+        return jsonResponse({ error: '缺少历史数据' });
       }
 
+      const versionInfo = getVersionInfo(version) || VERSIONS.standard;
+      const questionsPerDimension = versionInfo.questionsPerDimension;
+      const dimensions = getDimensions();
+
+      // 计算倾向分数
       const tendencyScore = 2 - choiceIndex;
 
-      session.history.push({
-        question: session.currentQuestion.text,
+      // 添加本次回答到历史（前端需要更新localStorage）
+      const newEntry = {
+        question: currentQuestion.text,
         choice: choiceText,
         choiceIndex,
         tendencyScore,
-        dimension: session.currentDimension,
-        questionId: session.currentQuestion.id,
-        difficulty: session.currentQuestion.difficulty || 'medium'
-      });
-      session.usedQuestionIds.push(session.currentQuestion.id);
+        dimension: currentDimension,
+        questionId: currentQuestion.id,
+        difficulty: currentQuestion.difficulty || 'medium'
+      };
 
-      const answersInDimension = session.history.filter(h => h.dimension === session.currentDimension);
-      const answersCount = answersInDimension.length;
-      const dimensionTendencySum = answersInDimension.reduce((sum, h) => sum + h.tendencyScore, 0);
-      const totalAnswersCount = session.history.length;
+      // 获取已用题目ID
+      const usedQuestionIds = history.map(h => h.questionId);
+      usedQuestionIds.push(currentQuestion.id);
 
-      let aiRecommendation = null;
+      // 更新后的历史
+      const updatedHistory = [...history, newEntry];
+      const totalAnswersCount = updatedHistory.length;
 
       // AI分析（每aiCallInterval题）
-      if (totalAnswersCount > 0 && totalAnswersCount % session.aiCallInterval === 0) {
+      let aiRecommendation = null;
+      const answersInDimension = updatedHistory.filter(h => h.dimension === currentDimension);
+      const dimensionTendencySum = answersInDimension.reduce((sum, h) => sum + h.tendencyScore, 0);
+
+      if (totalAnswersCount > 0 && totalAnswersCount % versionInfo.aiCallInterval === 0) {
         try {
           const apiKey = env.ZHIPU_API_KEY;
-          const prompt = buildAnalysisPrompt(answersInDimension, session.currentDimension, dimensionTendencySum);
-          const aiResponse = await callAI(apiKey, prompt);
-          aiRecommendation = parseAIJSON(aiResponse);
+          if (apiKey) {
+            const prompt = buildAnalysisPrompt(answersInDimension, currentDimension, dimensionTendencySum);
+            const aiResponse = await callAI(apiKey, prompt);
+            aiRecommendation = parseAIJSON(aiResponse);
+          }
         } catch (error) {
           aiRecommendation = { nextDifficulty: 'medium', nextTopic: '继续当前维度' };
         }
       }
 
-      // 检查维度是否完成
-      const currentDimensionQuestions = session.questionsPerDimension[session.currentDimension] || 15;
-      const dimensions = getDimensions();
+      // 检查是否所有维度完成
       const allDimensionsCompleted = dimensions.every(dim => {
-        const count = session.history.filter(h => h.dimension === dim).length;
-        return count >= session.questionsPerDimension[dim];
+        const count = updatedHistory.filter(h => h.dimension === dim).length;
+        return count >= questionsPerDimension[dim];
       });
 
       if (allDimensionsCompleted) {
         try {
           const apiKey = env.ZHIPU_API_KEY;
-          const finalPrompt = buildFinalPrompt(session.history, session.questionsPerDimension);
+          if (!apiKey) {
+            return jsonResponse({ error: 'API密钥未配置' });
+          }
+          const finalPrompt = buildFinalPrompt(updatedHistory, questionsPerDimension);
           const finalResult = await callAI(apiKey, finalPrompt, 500);
           const personality = parseAIJSON(finalResult);
 
           return jsonResponse({
             completed: true,
             personality,
-            history: session.history,
-            version: session.versionInfo,
-            sessionId
+            history: updatedHistory,
+            version: versionInfo
           });
         } catch (error) {
-          return jsonResponse({ error: '分析失败' });
+          return jsonResponse({ error: '分析失败: ' + error.message });
         }
       }
 
       // 获取下一题
       const difficulty = aiRecommendation?.nextDifficulty || 'medium';
-      const nextDimension = selectRandomDimension(session.history, session.questionsPerDimension, dimensions);
+      const nextDimension = selectRandomDimension(updatedHistory, questionsPerDimension, dimensions);
 
       if (!nextDimension) {
         // 所有维度完成
         try {
           const apiKey = env.ZHIPU_API_KEY;
-          const finalPrompt = buildFinalPrompt(session.history, session.questionsPerDimension);
+          if (!apiKey) {
+            return jsonResponse({ error: 'API密钥未配置' });
+          }
+          const finalPrompt = buildFinalPrompt(updatedHistory, questionsPerDimension);
           const finalResult = await callAI(apiKey, finalPrompt, 500);
           const personality = parseAIJSON(finalResult);
 
           return jsonResponse({
             completed: true,
             personality,
-            history: session.history,
-            version: session.versionInfo,
-            sessionId
+            history: updatedHistory,
+            version: versionInfo
           });
         } catch (error) {
-          return jsonResponse({ error: '分析失败' });
+          return jsonResponse({ error: '分析失败: ' + error.message });
         }
       }
 
-      session.currentDimension = nextDimension;
-      const nextQuestion = getQuestion(nextDimension, difficulty, session.usedQuestionIds);
+      const nextQuestion = getQuestion(nextDimension, difficulty, usedQuestionIds);
 
-      if (!nextQuestion) {
-        const fallbackQuestion = getQuestion(nextDimension, 'medium', session.usedQuestionIds);
-        session.currentQuestion = fallbackQuestion;
-      } else {
-        session.currentQuestion = nextQuestion;
+      // 如果没有找到题目，尝试中等难度
+      const actualQuestion = nextQuestion || getQuestion(nextDimension, 'medium', usedQuestionIds);
+
+      if (!actualQuestion) {
+        return jsonResponse({ error: '题库 exhausted，请重新开始' });
       }
 
       return jsonResponse({
-        dimension: session.currentDimension,
-        question: session.currentQuestion,
+        dimension: nextDimension,
+        question: actualQuestion,
         aiRecommendation,
-        progress: { current: totalAnswersCount + 1, total: session.totalQuestions }
+        history: updatedHistory,
+        usedQuestionIds,
+        progress: { current: totalAnswersCount + 1, total: versionInfo.totalQuestions }
       });
     }
 
