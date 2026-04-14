@@ -607,7 +607,7 @@ export default {
           }
 
           const deepPrompt = buildDeepAnalysisPrompt(personality);
-          const deepResult = await callAI(apiKey, deepPrompt, 2500);
+          const deepResult = await callAI(apiKey, deepPrompt, 4000);
           const deepAnalysis = parseAIJSON(deepResult);
 
           return new Response(JSON.stringify({ success: true, deepAnalysis }), { headers: corsHeaders });

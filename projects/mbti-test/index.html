@@ -755,7 +755,34 @@
     <!-- 版本选择 -->
     <div class="version-section" id="versionSection">
       <h2>选择测试版本</h2>
-      <div class="version-cards" id="versionCards"></div>
+      <div class="version-cards" id="versionCards">
+        <!-- 默认版本卡片，页面加载时立即可选择 -->
+        <div class="version-card" data-version="quick" onclick="selectDefaultVersion('quick', this)">
+          <div class="name">快速版</div>
+          <div class="count">24题</div>
+          <div class="time">5分钟</div>
+        </div>
+        <div class="version-card selected" data-version="standard" onclick="selectDefaultVersion('standard', this)">
+          <div class="name">标准版</div>
+          <div class="count">60题</div>
+          <div class="time">10分钟</div>
+        </div>
+        <div class="version-card" data-version="professional" onclick="selectDefaultVersion('professional', this)">
+          <div class="name">专业版</div>
+          <div class="count">93题</div>
+          <div class="time">15分钟</div>
+        </div>
+        <div class="version-card" data-version="advanced" onclick="selectDefaultVersion('advanced', this)">
+          <div class="name">进阶版</div>
+          <div class="count">144题</div>
+          <div class="time">25分钟</div>
+        </div>
+        <div class="version-card" data-version="complete" onclick="selectDefaultVersion('complete', this)">
+          <div class="name">完整版</div>
+          <div class="count">200题</div>
+          <div class="time">35分钟</div>
+        </div>
+      </div>
       <div class="version-info" id="versionInfo">
         <strong>标准版（60题）</strong> - 日常自测推荐，约10分钟完成，AI动态调整难度
       </div>
@@ -856,6 +883,20 @@
         <span>AI正在生成深度分析...</span>
       </div>
 
+      <!-- 深度分析错误提示 -->
+      <div id="deepError" style="display:none;background:#fff3cd;border:1px solid #ffc107;border-radius:8px;padding:15px;margin:15px 0;color:#856404;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-size:20px;">⚠️</span>
+          <div>
+            <strong>深度分析生成失败</strong>
+            <div id="deepErrorMsg" style="font-size:13px;margin-top:5px;"></div>
+          </div>
+        </div>
+        <button onclick="retryDeepAnalysis()" style="margin-top:10px;padding:8px 15px;background:#ffc107;border:none;border-radius:5px;cursor:pointer;">
+          🔄 重试
+        </button>
+      </div>
+
       <div class="token-stats">
         <h3>📊 测试统计</h3>
         <div id="tokenStats">AI调用: 8次</div>
@@ -910,6 +951,32 @@
       'ESFP': '表演者型人格'
     };
 
+    // 默认版本数据
+    const defaultVersions = {
+      'quick': { id: 'quick', name: '快速版', totalQuestions: 24, timeEstimate: '5分钟', description: '快速了解人格倾向，约5分钟完成' },
+      'standard': { id: 'standard', name: '标准版', totalQuestions: 60, timeEstimate: '10分钟', description: '日常自测推荐，约10分钟完成，AI动态调整难度' },
+      'professional': { id: 'professional', name: '专业版', totalQuestions: 93, timeEstimate: '15分钟', description: '深入分析人格特质，约15分钟完成' },
+      'advanced': { id: 'advanced', name: '进阶版', totalQuestions: 144, timeEstimate: '25分钟', description: '全面人格探索，约25分钟完成' },
+      'complete': { id: 'complete', name: '完整版', totalQuestions: 200, timeEstimate: '35分钟', description: '最完整的人格画像，约35分钟完成' }
+    };
+
+    // 处理默认版本卡片选择（页面加载时立即可用）
+    function selectDefaultVersion(versionId, element) {
+      selectedVersion = versionId;
+
+      // 更新卡片样式
+      document.querySelectorAll('.version-card').forEach(card => {
+        card.classList.remove('selected');
+      });
+      element.classList.add('selected');
+
+      // 更新版本信息
+      const version = defaultVersions[versionId];
+      document.getElementById('versionInfo').innerHTML = `
+        <strong>${version.name}（${version.totalQuestions}题）</strong> - ${version.description}
+      `;
+    }
+
     // 初始化：获取版本列表
     async function init() {
       try {
@@ -918,18 +985,11 @@
         renderVersionCards(versions);
       } catch (error) {
         console.error('获取版本失败:', error);
-        // 使用默认版本
-        renderVersionCards([
-          { id: 'quick', name: '快速版', questionsPerDimension: 6, timeEstimate: '5分钟' },
-          { id: 'standard', name: '标准版', questionsPerDimension: 15, timeEstimate: '10分钟' },
-          { id: 'professional', name: '专业版', questionsPerDimension: 23, timeEstimate: '15分钟' },
-          { id: 'advanced', name: '进阶版', questionsPerDimension: 36, timeEstimate: '25分钟' },
-          { id: 'complete', name: '完整版', questionsPerDimension: 50, timeEstimate: '35分钟' }
-        ]);
+        // 使用默认版本 - 卡片已存在于HTML中，无需重新渲染
       }
     }
 
-    // 渲染版本卡片
+    // 渲染版本卡片（从API获取后更新）
     function renderVersionCards(versions) {
       const container = document.getElementById('versionCards');
       container.innerHTML = '';
@@ -1147,12 +1207,32 @@
 
         if (data.success && data.deepAnalysis) {
           renderDeepAnalysis(data.deepAnalysis);
+          // 隐藏错误提示（如果之前显示过）
+          document.getElementById('deepError').style.display = 'none';
         } else {
+          // 显示错误提示
+          document.getElementById('deepError').style.display = 'block';
+          document.getElementById('deepErrorMsg').textContent = data.error || 'AI分析返回格式异常';
           console.error('深度分析失败:', data.error);
         }
       } catch (error) {
         document.getElementById('loadingDeep').style.display = 'none';
+        // 显示错误提示
+        document.getElementById('deepError').style.display = 'block';
+        document.getElementById('deepErrorMsg').textContent = error.message || '网络请求失败，请检查网络连接';
         console.error('获取深度分析失败:', error);
+      }
+    }
+
+    // 存储当前人格数据用于重试
+    let currentPersonality = null;
+
+    // 重试深度分析
+    async function retryDeepAnalysis() {
+      document.getElementById('deepError').style.display = 'none';
+      document.getElementById('loadingDeep').style.display = 'block';
+      if (currentPersonality) {
+        await fetchDeepAnalysis(sessionId, currentPersonality);
       }
     }
 
