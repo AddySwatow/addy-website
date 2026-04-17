@@ -480,7 +480,7 @@ function buildFinalPrompt(history, questionsPerDimension) {
 维度统计：${JSON.stringify(dimensionStats)}
 最终类型：${finalType}
 
-返回JSON：{"EI":{"score":${dimensionStats.EI.percentage},"tendency":"${dimensionStats.EI.tendency}"},"SN":{"score":${dimensionStats.SN.percentage},"tendency":"${dimensionStats.SN.tendency}"},"TF":{"score":${dimensionStats.TF.percentage},"tendency":"${dimensionStats.TF.tendency}"},"JP":{"score":${dimensionStats.JP.percentage},"tendency":"${dimensionStats.JP.tendency}"},"finalType":"${finalType}","confidence":85,"description":"性格特征简述"}`;
+返回JSON：{"EI":{"score":${dimensionStats.EI.percentage},"tendency":"${dimensionStats.EI.tendency}"},"SN":{"score":${dimensionStats.SN.percentage},"tendency":"${dimensionStats.SN.tendency}"},"TF":{"score":${dimensionStats.TF.percentage},"tendency":"${dimensionStats.TF.tendency}"},"JP":{"score":${dimensionStats.JP.percentage},"tendency":"${dimensionStats.JP.tendency}"},"finalType":"${finalType}","confidence":85,"description":"直接用第一人称生动描述这个人格的特点约300-400字不要开头套话直接进入描述把四个维度融合讲述用具体场景和比喻说出典型行为习惯和思维方式避免学术术语用通俗表达结尾点出独特魅力"}`;
 }
 
 function buildDeepAnalysisPrompt(personality) {
@@ -492,61 +492,22 @@ function buildDeepAnalysisPrompt(personality) {
     'ISTP': '鉴赏家', 'ISFP': '探险家', 'ESTP': '企业家', 'ESFP': '表演者'
   };
 
-  return `你是MBTI人格深度分析专家，为${type}类型用户生成详细分析报告。
+  return `你是MBTI职业规划顾问。为${type}型人格推荐职业方向。
 
-## 用户信息
-- 人格类型：${type}（${typeNames[type] || ''}型）
-- 维度强度：${personality.EI.tendency}${personality.EI.score}%、${personality.SN.tendency}${personality.SN.score}%、${personality.TF.tendency}${personality.TF.score}%、${personality.JP.tendency}${personality.JP.score}%
+人格特点：${type}（${typeNames[type]}型）
+维度倾向：${personality.EI.tendency}${personality.EI.score}% ${personality.SN.tendency}${personality.SN.score}% ${personality.TF.tendency}${personality.TF.score}% ${personality.JP.tendency}${personality.JP.score}%
 
-## 核心特质
-${getCoreTraits(type)}
+任务要求：
+1. 推荐2个最适合的行业领域，说明每个行业为什么适合${type}型人格
+2. 推荐4个具体职业，每个职业给出匹配度百分比和中等长度匹配理由（20-30字）
+3. 社交方面：优势2条、挑战2条、建议2条
 
-## 请生成以下内容
+输出要求：
+只返回纯JSON，不要任何额外文字。
+所有字符串值不要包含双引号或换行符。
 
-### 1. 成长路径（三阶段）
-- 18-25岁：核心任务、具体建议（3条）、潜在挑战
-- 26-35岁：核心任务、具体建议（3条）、潜在挑战
-- 36-45岁：核心任务、具体建议（3条）、潜在挑战
-
-### 2. 职业匹配
-- 高匹配职业（2个，匹配度>85%）：职业名、匹配度、理由
-- 中匹配职业（1个，匹配度60-80%）：职业名、匹配度、注意事项
-
-### 3. 社交建议
-- 优势（2条）
-- 挑战（2条）
-- 技巧（2条）
-
-### 4. 名人匹配（3位）
-- 必须是${type}类型的名人
-- 至少1位中国名人
-- 包含：姓名、职业、匹配度、相似特质（3个）、差异点、名言
-
-## 输出格式
-严格返回以下JSON格式：
-{
-  "growthPath": {
-    "stages": [
-      {"ageRange": "18-25岁", "coreTask": "任务", "actionAdvice": ["建议1", "建议2", "建议3"], "challenges": ["挑战1", "挑战2"], "strengthGuidance": "倾向强度影响分析"},
-      {"ageRange": "26-35岁", "coreTask": "任务", "actionAdvice": ["建议1", "建议2", "建议3"], "challenges": ["挑战1", "挑战2"], "strengthGuidance": "倾向强度影响分析"},
-      {"ageRange": "36-45岁", "coreTask": "任务", "actionAdvice": ["建议1", "建议2", "建议3"], "challenges": ["挑战1", "挑战2"], "strengthGuidance": "倾向强度影响分析"}
-    ]
-  },
-  "careerAnalysis": {
-    "topMatches": [{"career": "职业", "matchScore": 90, "reason": "理由"}, {"career": "职业", "matchScore": 88, "reason": "理由"}],
-    "mediumMatch": {"career": "职业", "matchScore": 75, "caution": "注意事项"}
-  },
-  "socialAdvice": {
-    "strengths": ["优势1", "优势2"],
-    "challenges": ["挑战1", "挑战2"],
-    "tips": ["技巧1", "技巧2"]
-  },
-  "celebrityMatches": [
-    {"name": "名人名", "profession": "职业", "matchScore": 90, "similarTraits": ["特质1", "特质2", "特质3"], "difference": "差异点", "quote": "名言"},
-    {"name": "名人名", "profession": "职业", "matchScore": 88, "similarTraits": ["特质1", "特质2", "特质3"], "difference": "差异点", "quote": "名言"},
-    {"name": "名人名", "profession": "职业", "matchScore": 85, "similarTraits": ["特质1", "特质2", "特质3"], "difference": "差异点", "quote": "名言"}
-  ]
-}`;
+返回格式示例：
+{"industries":[{"name":"科技互联网","reason":"重视创新与逻辑思维适合INTJ分析能力"},{"name":"金融投资","reason":"需要理性决策和长期规划匹配INTJ特质"}],"careers":[{"name":"数据分析师","score":92,"reason":"需要深度分析能力和逻辑思维非常匹配"},{"name":"产品经理","score":85,"reason":"战略规划能力强善于把控全局方向"},{"name":"战略顾问","score":88,"reason":"擅长系统性思考能为企业提供长远方案"},{"name":"研究科学家","score":90,"reason":"专注深入钻研适合INTJ追求完美特质"}],"social":{"strengths":["善于倾听理解他人需求","做事有条理让人信任"],"challenges":["不太擅长社交场合","容易给人冷漠印象"],"tips":["主动分享想法增加亲和力","参加小型聚会练习社交"]}}`;
 }
 
 // ==================== AI调用 ====================

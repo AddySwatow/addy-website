@@ -193,10 +193,50 @@
       line-height: 1.6;
       color: var(--accent-primary);
     }
+    .header-notice .notice-header {
+      margin-bottom: 10px;
+    }
+    .header-notice .notice-title {
+      margin: 5px 0;
+      font-weight: 500;
+    }
+    .header-notice .notice-list {
+      margin: 5px 0 0 0;
+      padding: 0;
+      list-style: none;
+    }
+    .header-notice .notice-list li {
+      margin: 4px 0;
+      font-size: 12px;
+    }
+    .header-notice .notice-list li::before {
+      content: "";
+    }
     .header-notice a {
       color: var(--accent-primary);
       text-decoration: underline;
       text-underline-offset: 2px;
+    }
+    .copy-btn {
+      display: inline-block;
+      margin-left: 8px;
+      padding: 3px 10px;
+      font-size: 12px;
+      background: var(--bg-card);
+      border: 1px solid var(--accent-primary);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      color: var(--accent-primary);
+      transition: all var(--duration-fast);
+    }
+    .copy-btn:hover {
+      background: var(--accent-primary);
+      color: white;
+    }
+    .copy-btn.copied {
+      background: var(--dim-sn-primary);
+      border-color: var(--dim-sn-primary);
+      color: white;
     }
 
     /* ===== 温馨提示 ===== */
@@ -950,7 +990,15 @@
 
   <!-- 页眉温馨提示 -->
   <div class="header-notice">
-    📌 本测试来源于网页 <a href="https://about-addy.pages.dev" target="_blank">https://about-addy.pages.dev</a>，全程免费无广放心使用，内容部分由AI分析生成请注意甄别，仅供测试参考不构成建议和商业用途。
+    <p class="notice-header">📌 本测试来源于网页 <a href="https://about-addy.pages.dev" target="_blank">about-addy.pages.dev</a>
+      <button class="copy-btn" onclick="copyUrl()">📋 复制网址</button>
+    </p>
+    <p class="notice-title">💡 温馨提示：</p>
+    <ul class="notice-list">
+      <li>测试后如需保存结果图片，请在浏览器中打开网址测试（微信打开无法生成图片）；</li>
+      <li>题目越多准确性越高，但耗时更长，按需选择，推荐选择 <strong>60题</strong> 或 <strong>93题</strong> 版本；</li>
+      <li>全程免费无广告，部分内容由AI生成注意甄别，仅供参考，不构成建议和商业用途。</li>
+    </ul>
   </div>
 
   <div class="container">
@@ -1660,6 +1708,20 @@
 
     // 页面加载初始化
     init();
+
+    // 复制网址
+    function copyUrl() {
+      navigator.clipboard.writeText('https://about-addy.pages.dev/projects/mbti-test/')
+        .then(() => {
+          const btn = document.querySelector('.copy-btn');
+          btn.textContent = '✅ 已复制';
+          btn.classList.add('copied');
+          setTimeout(() => {
+            btn.textContent = '📋 复制网址';
+            btn.classList.remove('copied');
+          }, 2000);
+        });
+    }
 
     // 保存结果为图片
     async function saveResult() {
