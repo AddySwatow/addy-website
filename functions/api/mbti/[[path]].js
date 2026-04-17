@@ -480,7 +480,7 @@ function buildFinalPrompt(history, questionsPerDimension) {
 维度统计：${JSON.stringify(dimensionStats)}
 最终类型：${finalType}
 
-返回JSON：{"EI":{"score":${dimensionStats.EI.percentage},"tendency":"${dimensionStats.EI.tendency}"},"SN":{"score":${dimensionStats.SN.percentage},"tendency":"${dimensionStats.SN.tendency}"},"TF":{"score":${dimensionStats.TF.percentage},"tendency":"${dimensionStats.TF.tendency}"},"JP":{"score":${dimensionStats.JP.percentage},"tendency":"${dimensionStats.JP.tendency}"},"finalType":"${finalType}","confidence":85,"description":"直接用第一人称生动描述这个人格的特点约300-400字不要开头套话直接进入描述把四个维度融合讲述用具体场景和比喻说出典型行为习惯和思维方式避免学术术语用通俗表达结尾点出独特魅力"}`;
+返回JSON：{"EI":{"score":${dimensionStats.EI.percentage},"tendency":"${dimensionStats.EI.tendency}"},"SN":{"score":${dimensionStats.SN.percentage},"tendency":"${dimensionStats.SN.tendency}"},"TF":{"score":${dimensionStats.TF.percentage},"tendency":"${dimensionStats.TF.tendency}"},"JP":{"score":${dimensionStats.JP.percentage},"tendency":"${dimensionStats.JP.tendency}"},"finalType":"${finalType}","confidence":85,"description":"用第一人称写一段300-400字的人物小故事来展现这个人格。严格要求：1.禁止任何开头套话，不要出现你是一个典型的、作为XXX类型、XXX型人格等开头；2.禁止分维度讲述，不要出现在外向内向方面、在思考情感方面等表述；3.必须把四个维度特点融合在一起讲，像讲一个完整人物故事；4.用具体生活场景和比喻来展现特点，比如周末在家做什么、工作中如何处理问题、和朋友相处的方式等；5.全程不用任何MBTI术语和学术词汇，用普通人能懂的大白话；6.结尾一句话点出这种人格最迷人的地方"}`;
 }
 
 function buildDeepAnalysisPrompt(personality) {
