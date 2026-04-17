@@ -619,6 +619,30 @@
       box-shadow: 0 2px 10px rgba(255, 62, 125, 0.4);
     }
 
+    .portfolio-badge-new {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      padding: 0.4rem 0.8rem;
+      background: linear-gradient(135deg, #00c864, #00a050);
+      color: white;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      z-index: 2;
+      box-shadow: 0 2px 10px rgba(0, 200, 100, 0.4);
+      animation: newPulse 2s ease-in-out infinite;
+    }
+
+    @keyframes newPulse {
+      0%, 100% {
+        box-shadow: 0 2px 10px rgba(0, 200, 100, 0.4);
+      }
+      50% {
+        box-shadow: 0 2px 15px rgba(0, 200, 100, 0.6);
+      }
+    }
+
     .btn-outline {
       display: inline-block;
       margin: 3rem auto 0;
@@ -1700,8 +1724,8 @@
           「✨ 无为照见，有为自现。朝拭心镜，夕拾微光。✨」
         </p>
 
-        <div class="portfolio-grid">
-          <article class="portfolio-item" data-project-url="projects/jarvis/index.html" data-title="J.A.R.V.I.S. 全息地球">
+        <div class="portfolio-grid" id="portfolioGrid">
+          <article class="portfolio-item" data-project-url="projects/jarvis/index.html" data-title="J.A.R.V.I.S. 全息地球" data-date="2026-04-01">
             <img
               src="images/jarvis-preview.png"
               alt="J.A.R.V.I.S. - 全息地球交互系统"
@@ -1715,7 +1739,7 @@
             </div>
             <div class="portfolio-badge">AI + 手势交互</div>
           </article>
-          <article class="portfolio-item" data-project-url="projects/mood-gravity/index.html" data-title="情绪引力场 - Mood Gravity">
+          <article class="portfolio-item" data-project-url="projects/mood-gravity/index.html" data-title="情绪引力场 - Mood Gravity" data-date="2026-04-03">
             <img
               src="images/mood-gravity.png"
               alt="情绪引力场 - 交互式情绪释放体验"
@@ -1728,7 +1752,7 @@
             </div>
             <div class="portfolio-badge">情绪释放 + 3D粒子</div>
           </article>
-          <article class="portfolio-item" data-project-url="projects/shooter/index.html" data-title="弹弓射击小游戏">
+          <article class="portfolio-item" data-project-url="projects/shooter/index.html" data-title="弹弓射击小游戏" data-date="2026-04-12">
             <img
               src="images/shooter.png"
               alt="弹弓射击小游戏 - Slingshot Shooter"
@@ -1741,7 +1765,7 @@
             </div>
             <div class="portfolio-badge">Godot + 物理模拟</div>
           </article>
-          <article class="portfolio-item" data-project-url="projects/mbti-test/index.html" data-title="动态MBTI人格测试">
+          <article class="portfolio-item" data-project-url="projects/mbti-test/index.html" data-title="动态MBTI人格测试" data-date="2026-04-18">
             <img
               src="images/mbti-test.png"
               alt="动态MBTI人格测试 - AI驱动的智能难度调整"
@@ -1754,7 +1778,7 @@
             </div>
             <div class="portfolio-badge">AI + 心理测试</div>
           </article>
-          <article class="portfolio-item">
+          <article class="portfolio-item" data-date="2026-01-01">
             <img
               src="images/占位图片 (3).png"
               alt="Coming Soon"
@@ -1766,7 +1790,7 @@
               <span class="play-icon" aria-hidden="true">▶</span>
             </div>
           </article>
-          <article class="portfolio-item">
+          <article class="portfolio-item" data-date="2026-01-01">
             <img
               src="images/占位图片 (1).png"
               alt="Coming Soon"
@@ -2060,6 +2084,41 @@
         }, { rootMargin: '50px 0px' });
 
         lazyImages.forEach(img => imageObserver.observe(img));
+      }
+
+      // --- Portfolio Sorting & NEW Badge ---
+      const portfolioGrid = document.getElementById('portfolioGrid');
+      if (portfolioGrid) {
+        const portfolioItems = Array.from(portfolioGrid.querySelectorAll('.portfolio-item'));
+
+        // 按日期排序（最新在前）
+        portfolioItems.sort((a, b) => {
+          const dateA = new Date(a.dataset.date || '2026-01-01');
+          const dateB = new Date(b.dataset.date || '2026-01-01');
+          return dateB - dateA; // 降序排列
+        });
+
+        // 重新排列DOM元素
+        portfolioItems.forEach(item => portfolioGrid.appendChild(item));
+
+        // 计算今天日期
+        const today = new Date('2026-04-18');
+
+        // 为7天内更新的作品添加NEW标签
+        portfolioItems.forEach(item => {
+          const itemDate = new Date(item.dataset.date || '2026-01-01');
+          const daysDiff = Math.floor((today - itemDate) / (1000 * 60 * 60 * 24));
+
+          if (daysDiff <= 7 && item.dataset.projectUrl) {
+            // 检查是否已有NEW标签（避免重复添加）
+            if (!item.querySelector('.portfolio-badge-new')) {
+              const newBadge = document.createElement('div');
+              newBadge.className = 'portfolio-badge-new';
+              newBadge.textContent = 'NEW';
+              item.appendChild(newBadge);
+            }
+          }
+        });
       }
 
       // --- Tab Switcher for Trusted Section ---
