@@ -187,7 +187,7 @@
 
     /* ===== 页眉温馨提示 ===== */
     .header-notice {
-      text-align: center;
+      text-align: left;
       padding: 15px 20px;
       font-size: 13px;
       line-height: 1.6;
@@ -202,15 +202,13 @@
     }
     .header-notice .notice-list {
       margin: 5px 0 0 0;
-      padding: 0;
-      list-style: none;
+      padding-left: 20px;
+      list-style: decimal;
     }
     .header-notice .notice-list li {
       margin: 4px 0;
       font-size: 12px;
-    }
-    .header-notice .notice-list li::before {
-      content: "";
+      padding-left: 0;
     }
     .header-notice a {
       color: var(--accent-primary);
@@ -990,15 +988,13 @@
 
   <!-- 页眉温馨提示 -->
   <div class="header-notice">
-    <p class="notice-header">📌 本测试来源于网页 <a href="https://about-addy.pages.dev" target="_blank">about-addy.pages.dev</a>
-      <button class="copy-btn" onclick="copyUrl()">📋 复制网址</button>
-    </p>
+    <p class="notice-header">📌 本测试来源于网页 <a href="https://about-addy.pages.dev" target="_blank">about-addy.pages.dev</a> <button class="copy-btn" onclick="copyUrl()">📋 复制网址</button></p>
     <p class="notice-title">💡 温馨提示：</p>
-    <ul class="notice-list">
-      <li>测试后如需保存结果图片，请在浏览器中打开网址测试（微信打开无法生成图片）；</li>
-      <li>题目越多准确性越高，但耗时更长，按需选择，推荐选择 <strong>60题</strong> 或 <strong>93题</strong> 版本；</li>
-      <li>全程免费无广告，部分内容由AI生成注意甄别，仅供参考，不构成建议和商业用途。</li>
-    </ul>
+    <ol class="notice-list">
+      <li>微信打开无法保存结果图片，建议点击复制到浏览器中打开；</li>
+      <li>题目越多准确性越高，耗时更长，推荐选择 <strong>60题</strong> 或 <strong>93题</strong> 版本；</li>
+      <li>免费无广告，部分内容由AI生成仅供参考，不构成建议和商业用途。</li>
+    </ol>
   </div>
 
   <div class="container">
